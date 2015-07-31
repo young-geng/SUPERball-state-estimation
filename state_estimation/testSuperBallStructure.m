@@ -7,14 +7,15 @@ barSpacing = 0.375;
 barLength = 1.7;
 lims = 1.2*barLength;
 
-tspan =0.05;          % time between plot updates in seconds
-delT = 0.005;         % timestep for dynamic sim in seconds
-K = 998;             %outer rim string stiffness in Newtons/meter
+tspan =0.1;          % time between plot updates in seconds
+delT = 0.001;         % timestep for dynamic sim in seconds
+delTUKF  = 0.005;
+K = 998;              %outer rim string stiffness in Newtons/meter
 nodalMass = 1.625*ones(12,1);
 c = 40;             % damping constant, too lazy to figure out units.
 F = zeros(12,3);
 stringStiffness = K*ones(24,1);
-barStiffness = 50000*ones(6,1);
+barStiffness = 25000*ones(6,1);
 stringDamping = c*ones(24,1);  %string damping vector
 
 options = optimoptions('quadprog','Algorithm',  'interior-point-convex','Display','off');
@@ -52,9 +53,9 @@ for i = 1:N-1
     stringsMult = [stringsMult strings+12*(i)];
     barsMult = [barsMult bars+12*(i)];
 end
-superBallDynamicsPlot = TensegrityPlot(repmat(nodes,5,1), stringsMult, barsMult, 0.025,0.005);
+superBallDynamicsPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
 superBall = TensegrityStructure(nodes, strings, bars, F, stringStiffness,...
-    barStiffness, stringDamping, nodalMass, delT,stringRestLength);
+    barStiffness, stringDamping, nodalMass, delT,delTUKF,stringRestLength);
 
 f = figure('units','normalized','outerposition',[0 0 1 1]);
 
@@ -77,7 +78,7 @@ colormap cool% winter
 xlim([-lims lims])
 ylim([-lims lims])
 zlim(1.6*[-0.01 lims])
-title('Static IK Command');
+title('Inputs with added Sensor Noise');
 
 
 %%%%%% Dynamics Subplot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -101,7 +102,7 @@ lighting flat
 xlim([-lims lims])
 ylim([-lims lims])
 zlim(1.6*[-0.01 lims])
-title('Dynamics Simulation');
+title('UKF outPuts');
 superBallUpdate(superBall,superBallCommandPlot,superBallDynamicsPlot,tspan);
 % 
 for i = 1:200

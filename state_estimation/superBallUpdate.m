@@ -1,33 +1,38 @@
-function superBallUpdate(superBall1,superBallCommandPlot1,superBallDynamicsPlot1,tspan1)
+function superBallUpdate(superBall1,superBallDynamicsPlot1,superBallUKFPlot1,tspan1)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
 %create some persistent variables for objects and structs
-persistent superBall superBallCommandPlot superBallDynamicsPlot tspan
+persistent superBall superBallDynamicsPlot superBallUKFPlot tspan
 
 
 if nargin>1
     superBall = superBall1;
-    superBallCommandPlot = superBallCommandPlot1;
     superBallDynamicsPlot = superBallDynamicsPlot1;
+    superBallUKFPlot = superBallUKFPlot1;
     tspan = tspan1;
 end
 
 %%%%%%%%%%%%%%%%%% update Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%%%%%%%%%%%%% update superBall nodes in command plot and superBall object %%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%% update superBall nodes %%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%Compute Command and update dynamics if feasible command is generated%%%%%%%
+%%%%%%%%%%%%Compute Command and update dynamics $%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+dynamicsUpdate(superBall,tspan);
+actualNodes =  superBall.ySim(1:end/2,:);
+noise = randn(size(actualNodes))*0.05;
+superBall.measurementUKFInput = actualNodes + noise;
 ukfUpdate(superBall,tspan);
 %disp( superBall.ySimUKF(1:end/2,:));
-yy = superBall.ySimUKF;
-yy = [yy(1:end/2,1:3); yy(1:end/2,(1:3)+3*35); yy(1:end/2,(1:3)+3*70); yy(1:end/2,(1:3)+3*105); yy(1:end/2,(1:3)+3*143)];
-superBallDynamicsPlot.nodePoints = yy;
+
+superBallDynamicsPlot.nodePoints = actualNodes + noise;
+superBallUKFPlot.nodePoints = superBall.ySimUKF;
 %disp( superBall.ySimUKF(1:end/2,:));
 updatePlot(superBallDynamicsPlot);
+updatePlot(superBallUKFPlot);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 drawnow %plot it up
