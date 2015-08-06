@@ -9,7 +9,7 @@ lims = 1.2*barLength;
 
 tspan =0.1;          % time between plot updates in seconds
 delT = 0.001;         % timestep for dynamic sim in seconds
-delTUKF  = 0.005;
+delTUKF  = 0.01;
 K = 998;              %outer rim string stiffness in Newtons/meter
 nodalMass = 1.625*ones(12,1);
 c = 40;             % damping constant, too lazy to figure out units.
@@ -44,7 +44,13 @@ strings = [1  1   1  1  2  2  2  2  3  3  3  3  4  4  4  4  5  5  6  6  7  7  8 
            7  8  10 12  5  6 10 12  7  8  9 11  5  6  9 11 11 12  9 10 11 12  9 10];
 stringRestLength = 0.95*ones(24,1)*norm(nodes(1,:)-nodes(7,:));
 %stringRestLength(1) = stringRestLength(1)*0.9;
-         
+
+
+lengthMeasureIndices = [2*ones(1,1), 3*ones(1,2), 4*ones(1,3), 5*ones(1,4), 6*ones(1,5), ...
+ 7*ones(1,6), 8*ones(1,7), 9*ones(1,8), 10*ones(1,9),11*ones(1,10),12*ones(1,11)...
+ 13*ones(1,12), 14*ones(1,12), 15*ones(1,12), 16*ones(1,12);
+ 1, 1:2, 1:3, 1:4, 1:5, 1:6, 1:7, 1:8,  1:9,1:10,1:11, 1:12, 1:12, 1:12, 1:12]';
+lengthMeasureIndices([1 6 15 28 45 66],:) = []; %eliminate bar measures
 superBallCommandPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
 N = 5;
 stringsMult = strings;

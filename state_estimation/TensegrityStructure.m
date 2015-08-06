@@ -42,6 +42,8 @@ classdef TensegrityStructure < handle
         groundHeight
         measurementUKFInput
         P
+        lengthMeasureIndices
+        baseStationPoints
         
     end
     
@@ -151,6 +153,10 @@ classdef TensegrityStructure < handle
                 'topNb',topNb,'botNb',botNb,'topNs',topNs,'botNs',botNs,'stringRestLengths',repmat(stringRestLengths,1,nUKF));
             obj.delT = delT;
             obj.delTUKF = delTUKF;
+            obj.baseStationPoints = [2 0 1;
+                             -2 -2 2;
+                              2 2 1.5;
+                              2 -2 0.5] ;
         end
         
         function staticTensions = getStaticTensions(obj,minForceDensity)
@@ -264,33 +270,33 @@ classdef TensegrityStructure < handle
                 y = obj.ySimUKF;
             end
             dt = obj.delTUKF;
- 
+            
             %%%%%%%%%%%%% ukf variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             z =  obj.measurementUKFInput(:);
             x = obj.ySimUKF(:);
             L = 72;
-            m = 36;
+            LI = obj.lengthMeasureIndices;
+            m = size(LI,2);
             alpha=1e-3;                                 %default, tunable
             ki = 0;% 3 - 145;                                       %default, tunable
             beta=2;                                     %default, tunable
-            lambda= 3-L;%alpha^2*(L+ki)-L;                    %scaling factor
+            lambda= 2-L;%alpha^2*(L+ki)-L;                    %scaling factor
             c=L+lambda;                                 %scaling factor
-            Ws=[lambda/c 0.5/c+zeros(1,2*L)];  
- 
+            Ws=[lambda/c 0.5/c+zeros(1,2*L)];
+            
             %disp(Wm')%weights for means
             Wc=Ws;
             Wc(1) = Wc(1)+(1-alpha^2+beta^2);
-            disp(sum(Wc))
             c=sqrt(c);
             X=sigmas(x,obj.P,c);
             X = reshape(X,24,[]);
             
             Q_noise = 0.00001^2*eye(L); %process noise covariance matrix
-            R_noise = 0.05^2*eye(m); %measurement noise covariance matrix
+            R_noise = 0.1^2*eye(m); %measurement noise covariance matrix
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
             
-            groundH = obj.groundHeight;            
+            groundH = obj.groundHeight;
             M = sim.M;
             fN = sim.fN;
             stiffness = [sim.stringStiffness; sim.barStiffness];
@@ -302,7 +308,7 @@ classdef TensegrityStructure < handle
             isString = [ones(obj.ss,nUKF); zeros(obj.bb,nUKF)];
             
             
-            
+            ind1 = 1:3:3*nUKF; ind2 = ind1+1; ind3 = ind1+2;
             
             yy = X(1:end/2,:);
             yDot = X((1:end/2)+end/2,:);
@@ -320,15 +326,20 @@ classdef TensegrityStructure < handle
             end
             
             %%%%%%%%%%%%%% Unscented Transformation of Process %%%%%%%%%%%%
-           
+            
             X1 =[yy;yDot]; %Forward propagated particles
             X1 = reshape(X1,72,[]);
             x1 = X1*Ws';    %Weighted average of forward propagated particles
             X2 = X1 - x1(:,ones(1,nUKF)); %Particles with average subtracted
             P1 = X2*diag(Wc)*X2'+Q_noise; %State covariance?
             
+            
             %%%%%%%%%%%%% Unscented Transformation of Measurements %%%%%%%%
-            Z1 = reshape(yy,36,[]); %Measurements are just x-y-z coord for now
+            yyPlusBase = [yy; repmat(obj.baseStationPoints,nUKF)];
+            allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
+            %disp(allVectors)
+            Z1 = sqrt(allVectors(:,ind1) + allVectors(:,ind2) + allVectors(:,ind3));
+            % this is if you have xyz coord -> Z1 = reshape(yy,m,[]); %Measurements are just x-y-z coord for now
             z1 = Z1*Ws'; %Weighted average of forward propagated measurements
             Z2 = Z1 - z1(:,ones(1,nUKF)); %Measuremnets with average subtracted
             P2 = Z2*diag(Wc)*Z2'+R_noise; %Measurement covariance
@@ -342,13 +353,11 @@ classdef TensegrityStructure < handle
             function nodeXYZdoubleDot = getAccels(nodeXYZs,nodeXYZdots)
                 memberNodeXYZ = nodeXYZs(topN,:) - nodeXYZs(botN,:);
                 memberNodeXYZdot = nodeXYZdots(topN ,:) - nodeXYZdots(botN,:);
-                memberNodeXYZvert = reshape(memberNodeXYZ',3,[]);
-                memberNodeXYZdotVert = reshape(memberNodeXYZdot',3,[]);
-                lengths = sqrt(sum(memberNodeXYZvert.*memberNodeXYZvert,1));
-                lengths = reshape(lengths,nUKF,[]).';
-                memberVel = sum(memberNodeXYZvert.*memberNodeXYZdotVert,1);
-                memberVel = reshape(memberVel,nUKF,[]).';
-                Q = stiffness.*(restLengths ./ lengths-1) - damping.*memberVel;
+                memNodeXYZsq = memberNodeXYZ.^2;
+                memNodeXYZdotProd = memberNodeXYZdot.* memberNodeXYZ;
+                lengths = sqrt(memNodeXYZsq(:,ind1) + memNodeXYZsq(:,ind2) + memNodeXYZsq(:,ind3));
+                memberVel = memNodeXYZdotProd(:,ind1) + memNodeXYZdotProd(:,ind2) + memNodeXYZdotProd(:,ind3);
+                Q = stiffness.*(restLengths ./ lengths-1) - damping.*memberVel; %compute force densities
                 Q((isString & (restLengths>lengths | Q>0))) = 0;
                 GG = memberNodeXYZ.*Q(:,Qindex);
                 FF = CC*GG;
@@ -385,5 +394,5 @@ function X=sigmas(x,P,c)
 
 A = c*chol(P)';
 Y = x(:,ones(1,numel(x)));
-X = [x Y+A Y-A]; 
+X = [x Y+A Y-A];
 end
