@@ -57,9 +57,7 @@ classdef TensegrityPlot < handle
             end
             
             %%%%%%%%%%%%%%% Check barNodes for errors %%%%%%%%%%%%%%%%%
-            if (isnumeric(barNodes) && ~any(mod(barNodes(:),1)))...
-                    && size(barNodes,1) == 2
-                if  (max(barNodes(:))<=obj.n) && (min(barNodes(:))>0)
+            
                     obj.bb = size(barNodes,2);
                     for i= 1:obj.bb
                         if barNodes(1,i) == barNodes(2,i)
@@ -70,14 +68,7 @@ classdef TensegrityPlot < handle
                         end
                     end
                     obj.barNodes = barNodes;
-                    
-                else
-                    error('barNodes entries need to be in the range of 1 to n')
-                end
-            else
-                error('barNodes should be a 2 by bb matrix of positive integers')
-            end
-            
+                           
             %%%%%%%%%%%%% Check for repeat bars or strings %%%%%%%%%%%%%
             B = unique([stringNodes barNodes]', 'rows');
             if size(B,1) ~= (obj.bb+obj.ss)
@@ -128,8 +119,13 @@ classdef TensegrityPlot < handle
                 obj.sphereTForm(i).Matrix = H;
             end
            % H = zeros(obj.bb+obj.ss,4,4);
+           if(isempty(obj.barNodes))
+               nodeXYZ1 = obj.nodePoints( obj.stringNodes(1,:),:);
+            nodeXYZ2 = obj.nodePoints( obj.stringNodes(2,:),:);
+           else
             nodeXYZ1 = obj.nodePoints([obj.barNodes(1,:), obj.stringNodes(1,:)],:);
             nodeXYZ2 = obj.nodePoints([obj.barNodes(2,:), obj.stringNodes(2,:)],:);
+           end          
             tForms = [obj.barTForm; obj.stringTForm];
             updateMember(nodeXYZ1,nodeXYZ2,tForms);
         end

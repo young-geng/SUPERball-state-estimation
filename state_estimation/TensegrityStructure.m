@@ -78,9 +78,7 @@ classdef TensegrityStructure < handle
             end
             
             %%%%%%%%%%%%%%% Check barNodes for errors %%%%%%%%%%%%%%%%%
-            if (isnumeric(barNodes) && ~any(mod(barNodes(:),1)))...
-                    && size(barNodes,1) == 2
-                if  (max(barNodes(:))<=obj.n) && (min(barNodes(:))>0)
+            
                     obj.bb = size(barNodes,2);
                     for i= 1:obj.bb
                         if barNodes(1,i) == barNodes(2,i)
@@ -91,13 +89,7 @@ classdef TensegrityStructure < handle
                         end
                     end
                     obj.barNodes = barNodes;
-                    
-                else
-                    error('barNodes entries need to be in the range of 1 to n')
-                end
-            else
-                error('barNodes should be a 2 by bb matrix of positive integers')
-            end
+                   
             
             %%%%%%%%%%%%% Check for repeat bars or strings %%%%%%%%%%%%%
             B = unique([stringNodes barNodes]', 'rows');
@@ -134,8 +126,13 @@ classdef TensegrityStructure < handle
             %these are quick vector lists of bars and strings inserted into simstruct
             %used for efficiently computing string and bar lengths etc. so
             %that we don't waste time indexing string and bar nodes
+            if(isempty(obj.barNodes))
+                topNb = [];
+                botNb =[];
+            else
             topNb = obj.barNodes(1,:);
             botNb = obj.barNodes(2,:);
+            end
             topNs = obj.stringNodes(1,:);
             botNs = obj.stringNodes(2,:);
             M = ones(size(repmat(nodalMass,1,3)))./repmat(nodalMass,1,3);
@@ -143,20 +140,21 @@ classdef TensegrityStructure < handle
             fN = indexes(nodalMass<=0);
             barNodeXYZ =  obj.nodePoints(topNb,:) - obj.nodePoints(botNb,:);
             barLengths = sum((barNodeXYZ.*barNodeXYZ),2).^0.5;
-            obj.simStruct.topNb = obj.barNodes(1,:);
+            %obj.simStruct.topNb = obj.barNodes(1,:);
             obj.simStruct = struct('M',M,'fN',fN,'stringStiffness',stringStiffness,...
                 'barStiffness',barStiffness,'C',obj.C,'barRestLengths',barLengths,'stringDamping',stringDamping,...
                 'topNb',topNb,'botNb',botNb,'topNs',topNs,'botNs',botNs,'stringRestLengths',stringRestLengths);
-            nUKF = 145;
+            nUKF =1 + 12*(obj.n );
             obj.simStructUKF = struct('nUKF',nUKF,'M',repmat(M,1,nUKF),'fN',fN,'stringStiffness',repmat(stringStiffness,1,nUKF),...
                 'barStiffness',repmat(barStiffness,1,nUKF),'C',sparse(obj.C),'barRestLengths',repmat(barLengths,1,nUKF),'stringDamping',repmat(stringDamping,1,nUKF),...
                 'topNb',topNb,'botNb',botNb,'topNs',topNs,'botNs',botNs,'stringRestLengths',repmat(stringRestLengths,1,nUKF));
             obj.delT = delT;
             obj.delTUKF = delTUKF;
-            obj.baseStationPoints = [2 0 1;
-                             -2 -2 2;
-                              2 2 1.5;
-                              2 -2 0.5] ;
+            obj.baseStationPoints = [4 0 3;
+                                    -5 -5 1;
+                              3 3 2.5;
+                              6 -6 0.5;
+                              -4 4 5] ;
         end
         
         function staticTensions = getStaticTensions(obj,minForceDensity)
@@ -233,7 +231,7 @@ classdef TensegrityStructure < handle
                 lengths = sqrt(sum((memberNodeXYZ).^2,2));
                 memberVel = sum(memberNodeXYZ.*memberNodeXYZdot,2);
                 Q = stiffness.*(restLengths ./ lengths-1) - damping.*memberVel;
-                Q((isString & (restLengths>lengths | Q>0))) = 0;
+                Q((isString & (restLengths>lengths | Q>0))) = 0;                
                 FF = CC*(memberNodeXYZ.*Q(:,[1 1 1]));
                 normForces = -50000*(nodeXYZ(:,3) - groundH);
                 normForces(normForces<0) = 0;
@@ -265,7 +263,7 @@ classdef TensegrityStructure < handle
             end
             if(isempty(obj.ySimUKF))
                 obj.ySimUKF = [obj.nodePoints; zeros(size(obj.nodePoints))];
-                obj.P = eye(72);
+                obj.P = eye((nUKF-1)/2);
             else
                 y = obj.ySimUKF;
             end
@@ -274,7 +272,7 @@ classdef TensegrityStructure < handle
             %%%%%%%%%%%%% ukf variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             z =  obj.measurementUKFInput(:);
             x = obj.ySimUKF(:);
-            L = 72;
+            L = (nUKF-1)/2;
             LI = obj.lengthMeasureIndices;
             m = size(LI,2);
             alpha=1e-3;                                 %default, tunable
@@ -283,22 +281,23 @@ classdef TensegrityStructure < handle
             lambda= 2-L;%alpha^2*(L+ki)-L;                    %scaling factor
             c=L+lambda;                                 %scaling factor
             Ws=[lambda/c 0.5/c+zeros(1,2*L)];
-            
-            %disp(Wm')%weights for means
+            fN = sim.fN;
             Wc=Ws;
             Wc(1) = Wc(1)+(1-alpha^2+beta^2);
             c=sqrt(c);
             X=sigmas(x,obj.P,c);
-            X = reshape(X,24,[]);
+            X = reshape(X,obj.n*2,[]);
+            xx = reshape(x,obj.n*2,[]);
+            X(fN,:) = repmat(xx(fN,:),1,nUKF);
+            X(fN+obj.n,:) = 0;
             
-            Q_noise = 0.00001^2*eye(L); %process noise covariance matrix
+            Q_noise = 0.1^2*eye(L); %process noise covariance matrix
             R_noise = 0.1^2*eye(m); %measurement noise covariance matrix
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
             
             groundH = obj.groundHeight;
             M = sim.M;
-            fN = sim.fN;
             stiffness = [sim.stringStiffness; sim.barStiffness];
             CC = sim.C';
             restLengths = [sim.stringRestLengths; sim.barRestLengths];
@@ -328,16 +327,16 @@ classdef TensegrityStructure < handle
             %%%%%%%%%%%%%% Unscented Transformation of Process %%%%%%%%%%%%
             
             X1 =[yy;yDot]; %Forward propagated particles
-            X1 = reshape(X1,72,[]);
+            X1 = reshape(X1,obj.n*6,[]);
             x1 = X1*Ws';    %Weighted average of forward propagated particles
             X2 = X1 - x1(:,ones(1,nUKF)); %Particles with average subtracted
             P1 = X2*diag(Wc)*X2'+Q_noise; %State covariance?
             
             
             %%%%%%%%%%%%% Unscented Transformation of Measurements %%%%%%%%
-            yyPlusBase = [yy; repmat(obj.baseStationPoints,nUKF)];
+            yyPlusBase = [yy; repmat(obj.baseStationPoints,1,nUKF)];
+            %disp(size(yy))
             allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
-            %disp(allVectors)
             Z1 = sqrt(allVectors(:,ind1) + allVectors(:,ind2) + allVectors(:,ind3));
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]); %Measurements are just x-y-z coord for now
             z1 = Z1*Ws'; %Weighted average of forward propagated measurements
@@ -390,7 +389,6 @@ function X=sigmas(x,P,c)
 %       c: coefficient
 %Output:
 %       X: Sigma points
-
 
 A = c*chol(P)';
 Y = x(:,ones(1,numel(x)));
