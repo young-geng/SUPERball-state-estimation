@@ -9,7 +9,7 @@ lims = 1.2*barLength;
 
 tspan =0.1;          % time between plot updates in seconds
 delT = 0.001;         % timestep for dynamic sim in seconds
-delTUKF  = 0.01;
+delTUKF  = 0.005;
 K = 998;              %outer rim string stiffness in Newtons/meter
 nodalMass = 1.625*ones(12,1);
 c = 40;             % damping constant, too lazy to figure out units.
@@ -20,7 +20,18 @@ stringDamping = c*ones(24,1);  %string damping vector
 
 options = optimoptions('quadprog','Algorithm',  'interior-point-convex','Display','off');
 
-
+baseStationPoints = [0+0.96/2     ,   0-1.15/2      ,  1.63;
+                         -1.362+0.96/2  ,   0-1.15/2      ,  1.6606 ;  
+                         -2.4712+0.96/2  ,  1.1885-1.15/2 ,  1.9514;  
+                          0.2882+0.96/2  ,  2.4010-1.15/2  ,  1.8013;  
+                         -1.0626+0.96/2   , 2.4519-1.15/2 ,  1.7435 ];  
+                     
+                     
+baseStationPoints = [0 -2 2;
+                     2 0 1;
+                    -3 0 0;
+                     0 4 3];
+                     
 nodes = [-barSpacing     barLength*0.5  0;
          -barSpacing    -barLength*0.5  0;
           barSpacing     barLength*0.5  0;
@@ -62,7 +73,7 @@ end
 superBallDynamicsPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
 superBall = TensegrityStructure(nodes, strings, bars, F, stringStiffness,...
     barStiffness, stringDamping, nodalMass, delT,delTUKF,stringRestLength);
-
+superBall.baseStationPoints = baseStationPoints;
 f = figure('units','normalized','outerposition',[0 0 1 1]);
 
 %%%%%%%% IK Subplot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

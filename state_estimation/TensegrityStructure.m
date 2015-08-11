@@ -150,11 +150,7 @@ classdef TensegrityStructure < handle
                 'topNb',topNb,'botNb',botNb,'topNs',topNs,'botNs',botNs,'stringRestLengths',repmat(stringRestLengths,1,nUKF));
             obj.delT = delT;
             obj.delTUKF = delTUKF;
-            obj.baseStationPoints = [4 0 3;
-                                    -5 -5 1;
-                              3 3 2.5;
-                              6 -6 0.5;
-                              -4 4 5] ;
+            
         end
         
         function staticTensions = getStaticTensions(obj,minForceDensity)
@@ -276,7 +272,6 @@ classdef TensegrityStructure < handle
             LI = obj.lengthMeasureIndices;
             m = size(LI,2);
             alpha=1e-3;                                 %default, tunable
-            ki = 0;% 3 - 145;                                       %default, tunable
             beta=2;                                     %default, tunable
             lambda= 2-L;%alpha^2*(L+ki)-L;                    %scaling factor
             c=L+lambda;                                 %scaling factor
@@ -290,9 +285,8 @@ classdef TensegrityStructure < handle
             xx = reshape(x,obj.n*2,[]);
             X(fN,:) = repmat(xx(fN,:),1,nUKF);
             X(fN+obj.n,:) = 0;
-            
-            Q_noise = 0.1^2*eye(L); %process noise covariance matrix
-            R_noise = 0.1^2*eye(m); %measurement noise covariance matrix
+            Q_noise = 0.01^2*eye(L); %process noise covariance matrix
+            R_noise = 0.05^2*eye(m); %measurement noise covariance matrix
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
             
@@ -344,9 +338,10 @@ classdef TensegrityStructure < handle
             P2 = Z2*diag(Wc)*Z2'+R_noise; %Measurement covariance
             
             P12=X2*diag(Wc)*Z2'; %Transformed cross covariance matrix
+            %P2_inv = pinv(P2);
             K=P12/P2;
             x=x1+K*(z-z1);                              %state update
-            obj.P = P1 -K*P12';%P1-K*P12';                                %covariance update
+            obj.P = P1 -K*P12';                                %covariance update
             obj.ySimUKF = reshape(x,[],3);
             
             function nodeXYZdoubleDot = getAccels(nodeXYZs,nodeXYZdots)
@@ -373,7 +368,7 @@ classdef TensegrityStructure < handle
                 groundForces = [tangentForces normForces];
                 groundForces = groundForces(:,fIndex);
                 nodeXYZdoubleDot = (FF+groundForces).*M;
-                nodeXYZdoubleDot(:,3:3:end) = nodeXYZdoubleDot(:,3:3:end) -9.81;
+                nodeXYZdoubleDot(:,3:3:end) = nodeXYZdoubleDot(:,3:3:end) - 9.81;
                 nodeXYZdoubleDot(fN,:) = 0;
             end
         end
