@@ -7,7 +7,7 @@ barSpacing = 0.375;
 barLength = 1.7;
 lims = 1.2*barLength;
 
-tspan =0.1;          % time between plot updates in seconds
+tspan =0.05;          % time between plot updates in seconds
 delT = 0.001;         % timestep for dynamic sim in seconds
 delTUKF  = 0.005;
 K = 998;              %outer rim string stiffness in Newtons/meter
@@ -26,11 +26,11 @@ baseStationPoints = [0+0.96/2     ,   0-1.15/2      ,  1.63;
                           0.2882+0.96/2  ,  2.4010-1.15/2  ,  1.8013;  
                          -1.0626+0.96/2   , 2.4519-1.15/2 ,  1.7435 ];  
                      
-                     
-baseStationPoints = [0 -2 2;
-                     2 0 1;
-                    -3 0 0;
-                     0 4 3];
+%                      
+% baseStationPoints = [0 -2 2;
+%                      2 0 1;
+%                     -3 0 0;
+%                      0 4 3];
                      
 nodes = [-barSpacing     barLength*0.5  0;
          -barSpacing    -barLength*0.5  0;
@@ -64,12 +64,12 @@ lengthMeasureIndices = [2*ones(1,1), 3*ones(1,2), 4*ones(1,3), 5*ones(1,4), 6*on
 lengthMeasureIndices([1 6 15 28 45 66],:) = []; %eliminate bar measures
 superBallCommandPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
 N = 5;
-stringsMult = strings;
-barsMult = bars;
-for i = 1:N-1
-    stringsMult = [stringsMult strings+12*(i)];
-    barsMult = [barsMult bars+12*(i)];
-end
+% stringsMult = strings;
+% barsMult = bars;
+% for i = 1:N-1
+%     stringsMult = [stringsMult strings+12*(i)];
+%     barsMult = [barsMult bars+12*(i)];
+% end
 superBallDynamicsPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
 superBall = TensegrityStructure(nodes, strings, bars, F, stringStiffness,...
     barStiffness, stringDamping, nodalMass, delT,delTUKF,stringRestLength);
@@ -77,61 +77,58 @@ superBall.baseStationPoints = baseStationPoints;
 f = figure('units','normalized','outerposition',[0 0 1 1]);
 
 %%%%%%%% IK Subplot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-ax = subplot(1,2,1,'Parent',f,'units','normalized','outerposition',...
+ax1 = subplot(1,2,1,'Parent',f,'units','normalized','outerposition',...
     [0.01 0.1 0.48 0.9]);
 
 % use a method within TensegrityPlot class to generate a plot of the
 % structure
-generatePlot(superBallCommandPlot,ax)
+generatePlot(superBallCommandPlot,ax1)
 updatePlot(superBallCommandPlot);
 %settings to make it pretty
 axis equal
 view(3)
 grid on
-light('Position',[0 0 1],'Style','local')
+light('Position',[0 0 10],'Style','local')
 %lighting flat
-lighting gouraud
-colormap cool% winter
+lighting flat
+colormap([0.8 0.8 1; 0 1 1])
 xlim([-lims lims])
 ylim([-lims lims])
 zlim(1.6*[-0.01 lims])
-title('Inputs with added Sensor Noise');
+title('Simulated Input');
 
 
 %%%%%% Dynamics Subplot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-ax = subplot(1,2,2,'Parent',f,'units','normalized','outerposition',...
+ax2 = subplot(1,2,2,'Parent',f,'units','normalized','outerposition',...
     [0.51 0.1 0.48 0.9]);
 
 % use a method within TensegrityPlot class to generate a plot of the
 % structure
-generatePlot(superBallDynamicsPlot,ax);
+generatePlot(superBallDynamicsPlot,ax2);
 updatePlot(superBallDynamicsPlot);
 
-x = lims*[-1 1 1 -1];
-y = lims*[-1 -1 1 1];
-patch(x,y,zeros(size(x)))
 %settings to make it pretty
 axis equal
 view(3)
 grid on
-light('Position',[0 0 1],'Style','local')
+light('Position',[0 0 10]);%,'Style','local')
 lighting flat
-xlim([-lims lims])
-ylim([-lims lims])
-zlim(1.6*[-0.01 lims])
-title('UKF outPuts');
+% xlim([-lims lims])
+% ylim([-lims lims])
+% zlim(1.6*[-0.01 lims])
+title('UKF Output');
 superBallUpdate(superBall,superBallCommandPlot,superBallDynamicsPlot,tspan);
-% 
-for i = 1:200
-    superBallUpdate
-end
-% 
-% t = timer;
-% t.TimerFcn = @(myTimerObj, thisEvent) superBallUpdate;
-% t.Period = tspan;
-% t.ExecutionMode = 'fixedRate';
-% start(t);
-% 
-% 
+hlink = linkprop([ax1,ax2],{'CameraPosition','CameraUpVector','xLim','yLim','zLim'});
+% for i = 1:200
+%     superBallUpdate
+% end
+% % 
+t = timer;
+t.TimerFcn = @(myTimerObj, thisEvent) superBallUpdate;
+t.Period = tspan;
+t.ExecutionMode = 'fixedRate';
+start(t);
+
+% % 
 
 

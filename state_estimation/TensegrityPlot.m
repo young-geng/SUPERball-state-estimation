@@ -136,15 +136,16 @@ end
 function updateMember(p1,p2,tform)
 length = sum((p2-p1).^2,2).^0.5;
 n = size(p1,1);
-v1 = repmat([0 0 1],n,1);
-v2 = (p2-p1)./repmat(length,1,3);
-d = sum(v1 .* v2,2);
+vec = (p2-p1)./length(:,[1 1 1]);
+d =  vec(:,3);
 isVert= 1:n;
 isVert = isVert(d < -0.999999999);
 isOtherVert= 1:n;
 isOtherVert = isOtherVert(d > 0.9999999999);
 s = ((1+d)*2).^0.5;
-axis = cross(v1,v2);
+axis = vec(:,[2 1 3]);
+axis(:,3) = 0;
+axis(:,1) = -axis(:,1);
 if(~isempty(isOtherVert))
     axis(isOtherVert,:) = repmat([0.00001 0 0],size(isOtherVert,2),1);
     s(isOtherVert) = ones(size(isOtherVert,2),1);
