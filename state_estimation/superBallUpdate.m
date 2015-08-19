@@ -1,9 +1,9 @@
-function superBallUpdate(superBall1,superBallDynamicsPlot1,superBallUKFPlot1,tspan1)
+function superBallUpdate(superBall1,superBallDynamicsPlot1,superBallUKFPlot1,tspan1,ax1)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
 %create some persistent variables for objects and structs
-persistent superBall superBallDynamicsPlot superBallUKFPlot tspan allMeasureIndices lambdaErrors bars i
+persistent superBall superBallDynamicsPlot superBallUKFPlot tspan allMeasureIndices lambdaErrors bars i ax
 
 if nargin>1
     i = 0;
@@ -18,6 +18,7 @@ if nargin>1
     bars = [superBall.barNodes];
     allMeasureIndices(:,[1 6 15 28 45 66]) = []; %eliminate bar measures
     lambdaErrors = 0.05*randn(size(allMeasureIndices,2),1); 
+    ax = ax1;
     disp(lambdaErrors);
 end
 i = i+1;
@@ -60,8 +61,10 @@ updatePlot(superBallUKFPlot);
 lims = 1.2*1.7;
 x_Avg = mean(actualNodes(:,1));
 y_Avg = mean(actualNodes(:,2));
-xlim([-lims lims]+x_Avg)
-ylim([-lims lims]+y_Avg)
-drawnow %plot it up
+xlim(ax(1),[-lims lims]+x_Avg)
+ylim(ax(1),[-lims lims]+y_Avg)
+xlim(ax(2),[-lims lims]+x_Avg)
+ylim(ax(2),[-lims lims]+y_Avg)
+drawnow  %plot it up
 end
 
