@@ -79,7 +79,6 @@ f = figure('units','normalized','outerposition',[0 0 1 1]);
 %%%%%%%% IK Subplot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ax1 = subplot(1,2,1,'Parent',f,'units','normalized','outerposition',...
     [0.01 0.1 0.48 0.9]);
-
 % use a method within TensegrityPlot class to generate a plot of the
 % structure
 generatePlot(superBallCommandPlot,ax1)
@@ -119,10 +118,18 @@ lighting flat
 title('UKF Output');
 superBallUpdate(superBall,superBallCommandPlot,superBallDynamicsPlot,tspan);
 hlink = linkprop([ax1,ax2],{'CameraPosition','CameraUpVector','xLim','yLim','zLim'});
+
 % for i = 1:200
 %     superBallUpdate
+%   %  MM(i) = getframe(f);
 % end
-% % 
+%filename = 'quickAnimation.avi';
+%writerObj = VideoWriter(filename);
+%writerObj.FrameRate = 20;
+%open(writerObj);
+%writeVideo(writerObj,MM);
+%close(writerObj);
+% 
 t = timer;
 t.TimerFcn = @(myTimerObj, thisEvent) superBallUpdate;
 t.Period = tspan;

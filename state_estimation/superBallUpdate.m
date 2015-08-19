@@ -5,7 +5,6 @@ function superBallUpdate(superBall1,superBallDynamicsPlot1,superBallUKFPlot1,tsp
 %create some persistent variables for objects and structs
 persistent superBall superBallDynamicsPlot superBallUKFPlot tspan allMeasureIndices lambdaErrors bars i
 
-
 if nargin>1
     i = 0;
     superBall = superBall1;
@@ -63,7 +62,6 @@ x_Avg = mean(actualNodes(:,1));
 y_Avg = mean(actualNodes(:,2));
 xlim([-lims lims]+x_Avg)
 ylim([-lims lims]+y_Avg)
-
 drawnow %plot it up
 end
 
