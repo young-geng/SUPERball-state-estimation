@@ -48,7 +48,7 @@ classdef TensegrityStructure < handle
     end
     
     methods
-        function obj = TensegrityStructure(nodePoints, stringNodes, barNodes, F,stringStiffness,barStiffness,stringDamping,nodalMass,delT,delTUKF,stringRestLengths,grav)
+        function obj = TensegrityStructure(nodePoints, stringNodes, barNodes, F,stringStiffness,barStiffness,stringDamping,barDamping,nodalMass,delT,delTUKF,stringRestLengths,grav)
             if(size(nodePoints,2)~=3 || ~isnumeric(nodePoints))
                 error('node points should be n by 3 matrix of doubles')
             end
@@ -142,10 +142,10 @@ classdef TensegrityStructure < handle
             barLengths = sum((barNodeXYZ.*barNodeXYZ),2).^0.5;
             obj.simStruct = struct('M',M,'fN',fN,'stringStiffness',stringStiffness,...
                 'barStiffness',barStiffness,'C',obj.C,'barRestLengths',barLengths,'stringDamping',stringDamping,...
-                'topNb',topNb,'botNb',botNb,'topNs',topNs,'botNs',botNs,'stringRestLengths',stringRestLengths,'grav',grav);
+                'topNb',topNb,'botNb',botNb,'topNs',topNs,'botNs',botNs,'stringRestLengths',stringRestLengths,'barDamping',barDamping,'grav',grav);
             nUKF =1 + 12*(obj.n );
             obj.simStructUKF = struct('nUKF',nUKF,'M',repmat(M,1,nUKF),'fN',fN,'stringStiffness',repmat(stringStiffness,1,nUKF),...
-                'barStiffness',repmat(barStiffness,1,nUKF),'C',sparse(obj.C),'barRestLengths',repmat(barLengths,1,nUKF),'stringDamping',repmat(stringDamping,1,nUKF),...
+                'barStiffness',repmat(barStiffness,1,nUKF),'C',(sparse(obj.C)),'barRestLengths',repmat(barLengths,1,nUKF),'stringDamping',repmat(stringDamping,1,nUKF),'barDamping',repmat(barDamping,1,nUKF),...
                 'topNb',topNb,'botNb',botNb,'topNs',topNs,'botNs',botNs,'stringRestLengths',repmat(stringRestLengths,1,nUKF),'grav',grav);
             obj.delT = delT;
             obj.delTUKF = delTUKF;
@@ -200,7 +200,7 @@ classdef TensegrityStructure < handle
             else
                 y = obj.ySim;
             end
-            dt = obj.delT;           
+            dt = obj.delT;
             
             %friction model constants
             Kp = 20000;
@@ -218,25 +218,26 @@ classdef TensegrityStructure < handle
             stiffness = [sim.stringStiffness; sim.barStiffness];
             CC = sim.C';
             restLengths = [sim.stringRestLengths; sim.barRestLengths];
-            damping = [sim.stringDamping; zeros(obj.bb,1)];
+            damping = [sim.stringDamping; sim.barDamping];
             topN = [sim.topNs sim.topNb];
             botN = [sim.botNs sim.botNb];
             isString = [ones(1,obj.ss) zeros(1,obj.bb)]';
-            yy = y(1:end/2,:);
-            yDot = y((1:end/2)+end/2,:);
+            xyzNodes = y(1:end/2,:);
+            xyzDots = y((1:end/2)+end/2,:);
+           
             for i = 1:round(tspan/dt)                              % calculation loop
-                k_1 = getAccel(yy,yDot);
-                yDot1 = yDot+k_1*(1/3*dt);
-                k_2  = getAccel(yy+yDot*(1/3*dt), yDot1);
-                yDot2 = yDot+(k_2 - (1/3)*k_1)*(dt);
-                k_3 = getAccel(yy+(yDot1-1/3*yDot)*dt,yDot2);
-                yDot3 = yDot+(k_1 -k_2 + k_3)*dt;
-                k_4 = getAccel(yy+(yDot-yDot1+yDot2)*dt,yDot3);
-                yy = yy + (dt/8)*(yDot+3*(yDot1+yDot2)+yDot3);  % main equation
-                yDot = yDot + (dt/8)*(k_1+3*(k_2+k_3)+k_4);  % main equation
-                lastContact(staticNotApplied,:) = yy(staticNotApplied,1:2);
+                k_1 = getAccel(xyzNodes,xyzDots);
+                yDot1 = xyzDots+k_1*(1/3*dt);
+                k_2  = getAccel(xyzNodes+xyzDots*(1/3*dt), yDot1);
+                yDot2 = xyzDots+(k_2 - (1/3)*k_1)*(dt);
+                k_3 = getAccel(xyzNodes+(yDot1-1/3*xyzDots)*dt,yDot2);
+                yDot3 = xyzDots+(k_1 -k_2 + k_3)*dt;
+                k_4 = getAccel(xyzNodes+(xyzDots-yDot1+yDot2)*dt,yDot3);
+                xyzNodes = xyzNodes + (dt/8)*(xyzDots+3*(yDot1+yDot2)+yDot3);  % main equation
+                xyzDots = xyzDots + (dt/8)*(k_1+3*(k_2+k_3)+k_4);  % main equation
+                lastContact(staticNotApplied,:) = xyzNodes(staticNotApplied,1:2);
             end
-            obj.ySim =[yy;yDot];
+            obj.ySim =[xyzNodes;xyzDots];
             
             function nodeXYZdoubleDot = getAccel(nodeXYZ,nodeXYZdot)
                 memberNodeXYZ = nodeXYZ(topN,:) - nodeXYZ(botN,:); %C*nodeXYZ
@@ -286,7 +287,7 @@ classdef TensegrityStructure < handle
             Gindex = [1:nUKF; 1:nUKF]; Gindex = Gindex(:);
             ind1 = 1:3:3*nUKF; ind2 = ind1+1; ind3 = ind1+2; ind12 = [ind1; ind2]; ind12 = ind12(:);
             ind11 = 1:2:2*nUKF; ind22 = 2:2:2*nUKF;
-
+            
             
             if(nargin>2)
                 obj.ySimUKF = y0;
@@ -300,14 +301,12 @@ classdef TensegrityStructure < handle
             end
             dt = obj.delTUKF;
             
-            %friction model constants
-            Kp = 20000;  Kd = 5000;  muS = 0.64;  muD = 0.54; kk = 1000; kFP = 20000; kFD = 5000;
             
             %%%%%%%%%%%%% ukf tuning variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             z =  obj.measurementUKFInput(:); x = obj.ySimUKF(:);
             L = (nUKF-1)/2; LI = obj.lengthMeasureIndices;
             m = size(z,1);
-            alpha = 2/L; 
+            alpha = 2/L;
             beta = 2;
             ki = 0;
             lambda=alpha^2*(L+ki)-L;
@@ -315,10 +314,10 @@ classdef TensegrityStructure < handle
             Ws=[lambda/c , (0.5/c)*ones(1,2*L)];
             fN = sim.fN;
             Wc=Ws;  Wc(1) = Wc(1)+(1-alpha^2+beta^2);
-            c=sqrt(c);
+            rk=sqrt(c);
             
             %Compute the UKF sigmas
-            X=sigmas(x,obj.P,c);
+            X=sigmas(x,obj.P,rk);
             X = reshape(X,obj.n*2,[]);
             xx = reshape(x,obj.n*2,[]); %precursor to keep fixed nodes in place
             X(fN,:) = repmat(xx(fN,:),1,nUKF); %Used to keep fixed nodes in place
@@ -333,22 +332,21 @@ classdef TensegrityStructure < handle
             stiffness = [sim.stringStiffness; sim.barStiffness];
             CC = sim.C';
             restLengths = [sim.stringRestLengths; sim.barRestLengths];
-            damping = [sim.stringDamping; zeros(obj.bb,nUKF)];
+            damping = [sim.stringDamping; sim.barDamping];
             topN = [sim.topNs sim.topNb];
             botN = [sim.botNs sim.botNb];
-            isString = [ones(obj.ss,nUKF); zeros(obj.bb,nUKF)];
+            isString = logical([ones(obj.ss,nUKF); zeros(obj.bb,nUKF)]);
             xyzNodes = X(1:end/2,:);
             xyzDots = X((1:end/2)+end/2,:);
-            
             for i = 1:round(tspan/dt)                              % calculation loop
                 k_1 = getAccels(xyzNodes,xyzDots);
-                xyzDots1 = xyzDots+k_1*(1/3*dt);
-                k_2  = getAccels(xyzNodes+xyzDots*(1/3*dt), xyzDots1);
-                xyzDots2 = xyzDots+(k_2 - (1/3)*k_1)*(dt);
-                k_3 = getAccels(xyzNodes+(xyzDots1-1/3*xyzDots)*dt,xyzDots2);
-                xyzDots3 = xyzDots+(k_1 -k_2 + k_3)*dt;
-                k_4 = getAccels(xyzNodes+(xyzDots-xyzDots1+xyzDots2)*dt,xyzDots3);
-                xyzNodes = xyzNodes + (dt/8)*(xyzDots+3*(xyzDots1+xyzDots2)+xyzDots3);  % main equation
+                yDot1 = xyzDots+k_1*(1/3*dt);
+                k_2  = getAccels(xyzNodes+xyzDots*(1/3*dt), yDot1);
+                yDot2 = xyzDots+(k_2 - (1/3)*k_1)*(dt);
+                k_3 = getAccels(xyzNodes+(yDot1-1/3*xyzDots)*dt,yDot2);
+                yDot3 = xyzDots+(k_1 -k_2 + k_3)*dt;
+                k_4 = getAccels(xyzNodes+(xyzDots-yDot1+yDot2)*dt,yDot3);
+                xyzNodes = xyzNodes + (dt/8)*(xyzDots+3*(yDot1+yDot2)+yDot3);  % main equation
                 xyzDots = xyzDots + (dt/8)*(k_1+3*(k_2+k_3)+k_4);  % main equation
                 xys = xyzNodes(:,ind12);
                 lastContact(staticNotApplied(:,Gindex)) = xys(staticNotApplied(:,Gindex));
@@ -379,10 +377,14 @@ classdef TensegrityStructure < handle
             K=P12/P2;                                   %kalman gain
             x=x1+K*(z-z1);                              %state update
             obj.P = P1 -K*P12';                         %covariance update
-            obj.ySimUKF = reshape(x,[],3);            
+            obj.ySimUKF = reshape(x,[],3);
             
             function nodeXYZdoubleDot = getAccels(nodeXYZs,nodeXYZdots)
+                %friction model constants
+                Kp = 10000;  Kd = 2000;  muS = 0.64;  muD = 0.54; kk = 1000; kFP = 1000; kFD = 2000;
+                
                 memberNodeXYZ = nodeXYZs(topN,:) - nodeXYZs(botN,:);
+                %memberNodeXYZ = CCC*nodeXYZs;
                 memberNodeXYZdot = nodeXYZdots(topN ,:) - nodeXYZdots(botN,:);
                 memNodeXYZsq = memberNodeXYZ.^2;
                 memNodeXYZdotProd = memberNodeXYZdot.* memberNodeXYZ;
@@ -390,26 +392,27 @@ classdef TensegrityStructure < handle
                 memberVel = memNodeXYZdotProd(:,ind1) + memNodeXYZdotProd(:,ind2) + memNodeXYZdotProd(:,ind3); %linear velocities along member
                 Q = (stiffness.*(restLengths-lengths) - damping.*memberVel)./ lengths; %compute force densities
                 Q((isString & (restLengths>lengths | Q>0))) = 0; %slack strings apply no forces
-                GG = memberNodeXYZ.*Q(:,Qindex); %member vector forces
-                FF = CC*GG; %Multiply member XYZ forces by transpose of connectivity matrix to get nodal forces
+                memberForces = memberNodeXYZ.*Q(:,Qindex); %member vector forces
+                nodalMemberForces = CC*memberForces; %Multiply member XYZ forces by transpose of connectivity matrix to get nodal forces
                 penetration = groundH - nodeXYZs(:,3:3:end);
                 notTouching = (penetration)<0; %see which nodes are penetrating ground
-                normForces = (penetration).*(Kp - Kd*nodeXYZdots(:,3:3:end)); %Compute normal forces
+                normForces = ((penetration).*(Kp - Kd*nodeXYZdots(:,3:3:end))); %Compute normal forces
                 normForces(notTouching) = 0; %norm forces not touching are zero
                 xyDotMag = sqrt(nodeXYZdots(:,ind1).^2 + nodeXYZdots(:,ind2).^2 );
                 xyDot = nodeXYZdots(:,ind12);
                 staticF = kFP*(lastContact - nodeXYZs(:,ind12)) - kFD*xyDot;
                 staticNotApplied = ((staticF(:,ind11).^2 +  staticF(:,ind22).^2) > (muS*normForces).^2)|notTouching;
                 staticF(staticNotApplied(:,Gindex)) = 0;
+                staticF = (staticF);
                 w = (1 - exp(-kk*xyDotMag))./xyDotMag;
                 w(xyDotMag<1e-9) = kk;
                 dynamicFmag =  - muD * normForces .*w ;
                 dynamicFmag(~staticNotApplied) = 0;
                 dynamicF = dynamicFmag(:,Gindex).* xyDot;
                 tangentForces = staticF + dynamicF ;
-                groundForces = [tangentForces normForces];
-                groundForces = groundForces(:,fIndex);
-                nodeXYZdoubleDot = (FF+groundForces).*M;
+                groundForces = [tangentForces, normForces];
+                groundForces = (groundForces(:,fIndex));
+                nodeXYZdoubleDot = (nodalMemberForces+groundForces).*M;
                 nodeXYZdoubleDot(:,3:3:end) = nodeXYZdoubleDot(:,3:3:end) - grav;
                 nodeXYZdoubleDot(fN,:) = 0;
             end

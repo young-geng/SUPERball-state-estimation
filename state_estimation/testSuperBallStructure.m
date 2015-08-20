@@ -9,17 +9,16 @@ lims = 1.2*barLength;
 gravity = 9.81; % m/s^2
 tspan =0.05;          % time between plot updates in seconds
 delT = 0.001;         % timestep for dynamic sim in seconds
-delTUKF  = 0.005;
+delTUKF  = 0.01;
 K = 998;              %outer rim string stiffness in Newtons/meter
 nodalMass = 1.625*ones(12,1);
 c = 40;             % damping constant, too lazy to figure out units.
 F = zeros(12,3);
 stringStiffness = K*ones(24,1);
-barStiffness = 100000*ones(6,1);
+barStiffness = 50000*ones(6,1);
 stringDamping = c*ones(24,1);  %string damping vector
-
+barDamping = c/100*ones(6,1);
 options = optimoptions('quadprog','Algorithm',  'interior-point-convex','Display','off');
-addpath('..\tensegrityObjects')
 
 baseStationPoints = [0+0.96/2     ,   0-1.15/2      ,  1.63;
                          -1.362+0.96/2  ,   0-1.15/2      ,  1.6606 ;  
@@ -68,7 +67,7 @@ N = 5;
 % end
 superBallDynamicsPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
 superBall = TensegrityStructure(nodes, strings, bars, F, stringStiffness,...
-    barStiffness, stringDamping, nodalMass, delT,delTUKF,stringRestLength,gravity);
+    barStiffness, stringDamping,barDamping, nodalMass, delT,delTUKF,stringRestLength,gravity);
 superBall.baseStationPoints = baseStationPoints;
 f = figure('units','normalized','outerposition',[0 0 1 1]);
 
@@ -113,7 +112,6 @@ ylim([-lims lims])
 zlim(1.6*[-0.01 lims])
 title('UKF Output');
 superBallUpdate(superBall,superBallCommandPlot,superBallDynamicsPlot,tspan,[ax1 ax2]);
-%hlink = linkprop([ax1,ax2],{'CameraPosition','CameraUpVector'});
 
 for i = 1:200
     superBallUpdate
@@ -131,7 +129,7 @@ end
 % t.Period = tspan;
 % t.ExecutionMode = 'fixedRate';
 % start(t);
-
-% % 
+% 
+% % % 
 
 
