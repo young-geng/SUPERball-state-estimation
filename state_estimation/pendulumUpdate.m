@@ -1,4 +1,4 @@
-function pendulumUpdate(pendulum1,pendulumDynamicsPlot1,pendulumUKFPlot1,tspan1)
+function pendulumUpdate(vec,pendulum1,pendulumDynamicsPlot1,pendulumUKFPlot1,tspan1)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -11,36 +11,32 @@ if nargin>1
     pendulumDynamicsPlot = pendulumDynamicsPlot1;
     pendulumUKFPlot = pendulumUKFPlot1;
     tspan = tspan1;
-    allMeasureIndices = [2*ones(1,5);
-                         3:7];
+    allMeasureIndices = [1 2*ones(1,5);
+                         2 3:7];
 end
 
-%%%%%%%%%%%%%%%%%% update Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-%%%%%%%%%%%%%% update pendulum nodes %%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%Compute Command and update dynamics $%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%currentWorkingLengths = unique(round(rand(72,1)*107))+1;
-workingMeasureIndices = allMeasureIndices;
+disp(vec')
+indies = (2:1:6)';
+currentWorkingLengths = [1; indies(vec(:,2)>0)]; % unique(round(rand(5,1)*4))+1;
+%disp(currentWorkingLengths)
+workingMeasureIndices = allMeasureIndices(:,currentWorkingLengths);
 pendulum.lengthMeasureIndices = workingMeasureIndices;
-dynamicsUpdate(pendulum,tspan);
-actualNodes =  pendulum.ySim(1:end/2,:);
+%dynamicsUpdate(pendulum,tspan);
+%actualNodes =  pendulum.ySim(1:end/2,:);
 LI = workingMeasureIndices;
 noise = randn(size(LI,2),1)*0.05;
-yyPlusBase = [actualNodes; pendulum.baseStationPoints];
+%yyPlusBase = [actualNodes; pendulum.baseStationPoints];
 
-allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
-z = sqrt(sum(allVectors,2));
+%allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
+%zz = sqrt(sum(allVectors,2));
+%disp(zz)
+z = [2.4-0.73; vec((vec(:,2)>0),1)];
 pendulum.measurementUKFInput = z + noise;
 ukfUpdate(pendulum,tspan);
 
-pendulumDynamicsPlot.nodePoints = actualNodes ;
-pendulumUKFPlot.nodePoints = pendulum.ySimUKF;
-updatePlot(pendulumDynamicsPlot);
+%pendulumDynamicsPlot.nodePoints = actualNodes ;
+pendulumUKFPlot.nodePoints = [pendulum.ySimUKF(1:2,:); pendulum.baseStationPoints];
+%updatePlot(pendulumDynamicsPlot);
 updatePlot(pendulumUKFPlot);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
