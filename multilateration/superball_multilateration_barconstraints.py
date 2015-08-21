@@ -101,9 +101,9 @@ class Calibration(object):
 		self.grad_X_base = T.grad(self.cost,self.X_base,disconnected_inputs='ignore')
 		self.grad_X_floating = T.grad(self.cost,self.X_floating,disconnected_inputs='ignore')
 		print "Compiling functions"
-		self.f_cost = theano.function([self.X_base,self.X_floating,self.dist_B_B,self.dist_B_F,self.dist_F_F,self.dist_F_F_constraints,self.relative_cost_B_B,self.relative_cost_B_F,self.relative_cost_F_F,self.relative_cost_F_F_constraints,self.mult_B_B,self.mult_B_F,self.mult_F_F],self.cost,mode="FAST_RUN",on_unused_input='ignore')
-		self.f_grad_X_base = theano.function([self.X_base,self.X_floating,self.dist_B_B,self.dist_B_F,self.dist_F_F,self.dist_F_F_constraints,self.relative_cost_B_B,self.relative_cost_B_F,self.relative_cost_F_F,self.relative_cost_F_F_constraints,self.mult_B_B,self.mult_B_F,self.mult_F_F],self.grad_X_base,mode="FAST_RUN",on_unused_input='ignore')
-		self.f_grad_X_floating = theano.function([self.X_base,self.X_floating,self.dist_B_B,self.dist_B_F,self.dist_F_F,self.dist_F_F_constraints,self.relative_cost_B_B,self.relative_cost_B_F,self.relative_cost_F_F,self.relative_cost_F_F_constraints,self.mult_B_B,self.mult_B_F,self.mult_F_F],self.grad_X_floating,mode="FAST_RUN",on_unused_input='ignore')
+		self.f_cost = theano.function([self.X_base,self.X_floating,self.dist_B_B,self.dist_B_F,self.dist_F_F,self.dist_F_F_constraints,self.relative_cost_B_B,self.relative_cost_B_F,self.relative_cost_F_F,self.relative_cost_F_F_constraints,self.mult_B_B,self.mult_B_F,self.mult_F_F],self.cost,mode="FAST_COMPILE",on_unused_input='ignore')
+		self.f_grad_X_base = theano.function([self.X_base,self.X_floating,self.dist_B_B,self.dist_B_F,self.dist_F_F,self.dist_F_F_constraints,self.relative_cost_B_B,self.relative_cost_B_F,self.relative_cost_F_F,self.relative_cost_F_F_constraints,self.mult_B_B,self.mult_B_F,self.mult_F_F],self.grad_X_base,mode="FAST_COMPILE",on_unused_input='ignore')
+		self.f_grad_X_floating = theano.function([self.X_base,self.X_floating,self.dist_B_B,self.dist_B_F,self.dist_F_F,self.dist_F_F_constraints,self.relative_cost_B_B,self.relative_cost_B_F,self.relative_cost_F_F,self.relative_cost_F_F_constraints,self.mult_B_B,self.mult_B_F,self.mult_F_F],self.grad_X_floating,mode="FAST_COMPILE",on_unused_input='ignore')
 
 
 	def calibrate(self,
