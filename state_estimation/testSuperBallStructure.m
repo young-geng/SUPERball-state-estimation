@@ -10,11 +10,13 @@ gravity = 9.81; % m/s^2
 tspan =0.05;          % time between plot updates in seconds
 delT = 0.001;         % timestep for dynamic sim in seconds
 delTUKF  = 0.005;
-K = 998;              %outer rim string stiffness in Newtons/meter
+Kp = 998;              %passive string stiffness in Newtons/meter
+Ka = 3150;             %active string stiffness in Newtons/meter
+preTension = 100;      %how much force to apply to each cable in Newtons
 nodalMass = 1.625*ones(12,1);
 c = 40;             % damping constant, too lazy to figure out units.
 F = zeros(12,3);
-stringStiffness = K*ones(24,1);
+stringStiffness = [Ka*ones(12,1); Kp*ones(12,1)]; % First set of 12 is acuated springs, second is passive
 barStiffness = 100000*ones(6,1);
 stringDamping = c*ones(24,1);  %string damping vector
 
@@ -48,9 +50,14 @@ nodes(:,3) = nodes(:,3) +barLength*0.5+10 ;
 
 bars = [1:2:11; 
         2:2:12];
-strings = [1  1   1  1  2  2  2  2  3  3  3  3  4  4  4  4  5  5  6  6  7  7  8  8;
-           7  8  10 12  5  6 10 12  7  8  9 11  5  6  9 11 11 12  9 10 11 12  9 10];
-stringRestLength = 0.9*ones(24,1)*norm(nodes(1,:)-nodes(7,:));
+strings = [2 5 9  8 12 4  1 11 10 3 7 6 1 1 11 11 10 10 3 3 7  7 6 6;
+           5 9 8 12  4 2 11 10  1 7 6 3 9 5  2  4 12  8 5 2 4 12 8 9];
+%strings = [1  1   1  1  2  2  2  2  3  3  3  3  4  4  4  4  5  5  6  6  7  7  8  8;
+%           7  8  10 12  5  6 10 12  7  8  9 11  5  6  9 11 11 12  9 10 11 12  9 10];
+
+stringRestLength = [(1-(preTension/Ka))*ones(12,1)*norm(nodes(2,:)-nodes(5,:)); %active
+                    (1-(preTension/Kp))*ones(12,1)*norm(nodes(2,:)-nodes(5,:))]; %passive
+%stringRestLength = 0.9*ones(24,1)*norm(nodes(1,:)-nodes(7,:));
 
 
 lengthMeasureIndices = [2*ones(1,1), 3*ones(1,2), 4*ones(1,3), 5*ones(1,4), 6*ones(1,5), ...
@@ -115,7 +122,7 @@ title('UKF Output');
 superBallUpdate(superBall,superBallCommandPlot,superBallDynamicsPlot,tspan,[ax1 ax2]);
 %hlink = linkprop([ax1,ax2],{'CameraPosition','CameraUpVector'});
 
-for i = 1:200
+for i = 1:25
     superBallUpdate
   %  MM(i) = getframe(f);
 end

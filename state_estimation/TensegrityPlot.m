@@ -87,7 +87,7 @@ classdef TensegrityPlot < handle
                 set(obj.sphereTForm(i),'matrix',makehgtform('translate',obj.nodePoints(i,:)));
             end
             cylRes = 20;
-            r = ones(2,1)*obj.barRad;
+            r = ones(10,1)*obj.barRad;
             [xx,yy,zz] = cylinder(r,cylRes);
             barTForm = gobjects(obj.bb,1);
             for i = 1:obj.bb
