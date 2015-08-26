@@ -12,7 +12,7 @@ delT = 0.001;         % timestep for dynamic sim in seconds
 delTUKF  = 0.005;
 Kp = 998;              %passive string stiffness in Newtons/meter
 Ka = 3150;             %active string stiffness in Newtons/meter
-preTension = 100;      %how much force to apply to each cable in Newtons
+preTension = 90;      %how much force to apply to each cable in Newtons
 nodalMass = 1.625*ones(12,1);
 c = 40;             % damping constant, too lazy to figure out units.
 F = zeros(12,3);
@@ -31,18 +31,18 @@ baseStationPoints = [0+0.96/2     ,   0-1.15/2      ,  1.63;
                      
 
                      
-nodes = [-barSpacing     barLength*0.5  0;
-         -barSpacing    -barLength*0.5  0;
-          barSpacing     barLength*0.5  0;
-          barSpacing    -barLength*0.5  0;
-          0             -barSpacing     barLength*0.5;
-          0             -barSpacing    -barLength*0.5;
-          0              barSpacing     barLength*0.5;
-          0              barSpacing    -barLength*0.5;        
-          barLength*0.5  0             -barSpacing;
-         -barLength*0.5  0             -barSpacing;
-          barLength*0.5  0              barSpacing;
-         -barLength*0.5  0              barSpacing];
+nodes = [barSpacing     -barLength*0.5   0;
+         barSpacing      barLength*0.5   0;
+         0               barSpacing      barLength*0.5;
+         0               barSpacing     -barLength*0.5;
+         barLength*0.5   0               barSpacing;
+        -barLength*0.5   0               barSpacing;
+        -barSpacing      barLength*0.5   0;
+        -barSpacing     -barLength*0.5   0;
+         0              -barSpacing      barLength*0.5;
+         0              -barSpacing     -barLength*0.5; 
+         barLength*0.5   0              -barSpacing;
+        -barLength*0.5   0              -barSpacing];
      
 HH  = makehgtform('axisrotate',[1 1 0],0.3);
      nodes = (HH(1:3,1:3)*nodes')';
@@ -122,7 +122,7 @@ title('UKF Output');
 superBallUpdate(superBall,superBallCommandPlot,superBallDynamicsPlot,tspan,[ax1 ax2]);
 %hlink = linkprop([ax1,ax2],{'CameraPosition','CameraUpVector'});
 
-for i = 1:25
+for i = 1:150
     superBallUpdate
   %  MM(i) = getframe(f);
 end
