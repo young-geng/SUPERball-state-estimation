@@ -6,11 +6,11 @@ close all
 barLength = 1.7;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
-lims = 1.2*barLength;
+lims = 3*1.2*barLength;
 gravity = 9.81;             % m/s^2
-tspan =0.05;                % time between plot updates in seconds
+tspan =0.1;                % time between plot updates in seconds
 delT = 0.001;               % timestep for dynamic sim in seconds
-delTUKF  = 0.005;
+delTUKF  = 0.0025;
 Kp = 998;                   %passive string stiffness in Newtons/meter
 Ka = 3150;                  %active string stiffness in Newtons/meter
 preTension = 100*(barLength/1.7);                   % how much force to apply to each cable in Newtons
@@ -23,13 +23,11 @@ barStiffness = 100000*ones(6,1);
 stringDamping = [Ca*ones(12,1); Cp*ones(12,1)];     % string damping vector
 
 options = optimoptions('quadprog','Algorithm',  'interior-point-convex','Display','off');
-addpath('..\tensegrityObjects')
 
-baseStationPoints = [0+0.96/2     ,   0-1.15/2      ,  1.63;
-                         -1.362+0.96/2  ,   0-1.15/2      ,  1.6606 ;  
-                         -2.4712+0.96/2  ,  1.1885-1.15/2 ,  1.9514;  
-                          0.2882+0.96/2  ,  2.4010-1.15/2  ,  1.8013;  
-                         -1.0626+0.96/2   , 2.4519-1.15/2 ,  1.7435 ];  
+baseStationPoints = [-2.3800   -0.9800    2.4300;
+                     -3.3800         0    0.3500;
+                           0         0    0.3500;
+                     -0.7039   -2.1896    0.3500];  
                      
 
                      
@@ -46,9 +44,13 @@ nodes = [barSpacing     -barLength*0.5   0;
          barLength*0.5   0              -barSpacing;
         -barLength*0.5   0              -barSpacing];
      
-HH  = makehgtform('axisrotate',[1 1 0],0.3);
-     nodes = (HH(1:3,1:3)*nodes')';
-nodes(:,3) = nodes(:,3) +barLength*0.5+10 ;    
+HH  = makehgtform('axisrotate',[0 1 0],0.6);
+HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
+nodes = (HH(1:3,1:3)*nodes')';
+nodes(:,3) = nodes(:,3) - min(nodes(:,3)) +0.1;  
+nodes(:,2) = nodes(:,2) - 0.95 ;
+nodes(:,1) = nodes(:,1) - 0.95 ;
+%nodes
 
 bars = [1:2:11; 
         2:2:12];
@@ -69,12 +71,7 @@ lengthMeasureIndices = [2*ones(1,1), 3*ones(1,2), 4*ones(1,3), 5*ones(1,4), 6*on
 lengthMeasureIndices([1 6 15 28 45 66],:) = []; %eliminate bar measures
 superBallCommandPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
 N = 5;
-% stringsMult = strings;
-% barsMult = bars;
-% for i = 1:N-1
-%     stringsMult = [stringsMult strings+12*(i)];
-%     barsMult = [barsMult bars+12*(i)];
-% end
+
 superBallDynamicsPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
 superBall = TensegrityStructure(nodes, strings, bars, F, stringStiffness,...
     barStiffness, stringDamping, nodalMass, delT,delTUKF,stringRestLength,gravity);
@@ -121,26 +118,11 @@ xlim([-lims lims])
 ylim([-lims lims])
 zlim(1.6*[-0.01 lims])
 title('UKF Output');
+
 superBallUpdate(superBall,superBallCommandPlot,superBallDynamicsPlot,tspan,[ax1 ax2],barLength);
-%hlink = linkprop([ax1,ax2],{'CameraPosition','CameraUpVector'});
 
-for i = 1:250
-    superBallUpdate
-  %  MM(i) = getframe(f);
-end
-%filename = 'quickAnimation.avi';
-%writerObj = VideoWriter(filename);
-%writerObj.FrameRate = 20;
-%open(writerObj);
-%writeVideo(writerObj,MM);
-%close(writerObj);
-% 
-% t = timer;
-% t.TimerFcn = @(myTimerObj, thisEvent) superBallUpdate;
-% t.Period = tspan;
-% t.ExecutionMode = 'fixedRate';
-% start(t);
-
+%funcHandle = @(vec) superBallUpdate(vec); % passing ROS data to update Function
+rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(msg.Data));
 % % 
 
 

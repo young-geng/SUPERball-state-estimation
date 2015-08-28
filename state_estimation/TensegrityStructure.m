@@ -305,14 +305,15 @@ classdef TensegrityStructure < handle
             
             %%%%%%%%%%%%% ukf tuning variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             z =  obj.measurementUKFInput(:); x = obj.ySimUKF(:);
-            L = (nUKF-1)/2; LI = obj.lengthMeasureIndices;
+            L = (nUKF-1)/2;
+            LI = obj.lengthMeasureIndices;
             m = size(z,1);
             alpha = 2/L; 
             beta = 2;
             ki = 0;
             lambda=alpha^2*(L+ki)-L;
             c=L+lambda;
-            Ws=[lambda/c , (0.5/c)*ones(1,2*L)];
+            Ws=[lambda/c , (0.5/c)+zeros(1,2*L)];
             fN = sim.fN;
             Wc=Ws;  Wc(1) = Wc(1)+(1-alpha^2+beta^2);
             c=sqrt(c);
@@ -323,9 +324,10 @@ classdef TensegrityStructure < handle
             xx = reshape(x,obj.n*2,[]); %precursor to keep fixed nodes in place
             X(fN,:) = repmat(xx(fN,:),1,nUKF); %Used to keep fixed nodes in place
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
+            nAngleMeas = length(z)-size(LI,2);
             
             Q_noise = 0.0015^2*eye(L); %process noise covariance matrix
-            R_noise = blkdiag(0.01^2*eye(6),0.05^2*eye(m-6)); %measurement noise covariance matrix
+            R_noise = blkdiag(0.05^2*eye(nAngleMeas),0.05^2*eye(m-nAngleMeas)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;
@@ -356,6 +358,7 @@ classdef TensegrityStructure < handle
             
             %%%%%%%%%%%%%% Unscented Transformation of Process %%%%%%%%%%%%
             X1 =[xyzNodes;xyzDots]; %Forward propagated particles
+            storeState  = X1(:,1:3);
             X1 = reshape(X1,obj.n*6,[]);
             x1 = X1*Ws';    %Weighted average of forward propagated particles
             X2 = X1 - x1(:,ones(1,nUKF)); %Particles with average subtracted
@@ -366,20 +369,28 @@ classdef TensegrityStructure < handle
             barNorm = sqrt(barVec(:,ind1).^2 + barVec(:,ind2).^2 + barVec(:,ind3).^2);
             barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
             
-            yyPlusBase = [xyzNodes; repmat(obj.baseStationPoints,1,nUKF)];
+            yyPlusBase = [xyzNodes; 
+                          repmat(obj.baseStationPoints,1,nUKF)];
             allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
             lengthMeasures = sqrt(allVectors(:,ind1) + allVectors(:,ind2) + allVectors(:,ind3));
+            disp( mean(lengthMeasures(2,:)))
             Z1 = [barAngleFromVert;
-                lengthMeasures];
+                  lengthMeasures];
+              disp( mean(Z1(8,:)))
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]);
+            disp(Ws)
             z1 = Z1*Ws';                                %Weighted average of forward propagated measurements
+            disp(LI)
+            disp(z')
+            disp(z1')
+            disp((z-z1))
             Z2 = Z1 - z1(:,ones(1,nUKF));               %Measuremnets with average subtracted
             P2 = Z2*diag(Wc)*Z2'+R_noise;               %Measurement covariance
             P12=X2*diag(Wc)*Z2';                        %Transformed cross covariance matrix
             K=P12/P2;                                   %kalman gain
             x=x1+K*(z-z1);                              %state update
-            obj.P = P1 -K*P12';                         %covariance update
-            obj.ySimUKF = reshape(x,[],3);            
+            obj.P = eye(size(P1 -K*P12'));                         %covariance update
+            obj.ySimUKF = storeState;%reshape(x,[],3);            
             
             function nodeXYZdoubleDot = getAccels(nodeXYZs,nodeXYZdots)
                 memberNodeXYZ = nodeXYZs(topN,:) - nodeXYZs(botN,:);
