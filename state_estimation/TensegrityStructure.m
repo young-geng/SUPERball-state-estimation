@@ -390,7 +390,7 @@ classdef TensegrityStructure < handle
             K=P12/P2;                                   %kalman gain
             x=x1+K*(z-z1);                              %state update
             obj.P = eye(size(P1 -K*P12'));                         %covariance update
-            obj.ySimUKF = storeState;%reshape(x,[],3);            
+            obj.ySimUKF = reshape(x,[],3);            
             
             function nodeXYZdoubleDot = getAccels(nodeXYZs,nodeXYZdots)
                 memberNodeXYZ = nodeXYZs(topN,:) - nodeXYZs(botN,:);

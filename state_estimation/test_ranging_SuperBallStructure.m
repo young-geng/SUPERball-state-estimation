@@ -7,7 +7,7 @@ barLength = 1.7;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
 lims = 3*1.2*barLength;
-gravity = 0;             % m/s^2
+gravity = 9.81;             % m/s^2
 tspan =0.1;                % time between plot updates in seconds
 delT = 0.001;               % timestep for dynamic sim in seconds
 delTUKF  = 0.0025;
@@ -45,8 +45,8 @@ nodes = [barSpacing     -barLength*0.5   0;
          barLength*0.5   0              -barSpacing;
         -barLength*0.5   0              -barSpacing];
      
-HH  = makehgtform('axisrotate',[0 1 0],0.6);
-HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
+HH  = makehgtform('axisrotate',[0 1 0],0.);
+HH  = makehgtform('axisrotate',[1 0 0],0.)*HH;
 nodes = (HH(1:3,1:3)*nodes')';
 nodes(:,3) = nodes(:,3) - min(nodes(:,3)) +5;  
 nodes(:,2) = nodes(:,2) - 0.95 ;
