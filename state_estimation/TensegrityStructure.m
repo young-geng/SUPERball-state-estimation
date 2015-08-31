@@ -294,7 +294,7 @@ classdef TensegrityStructure < handle
             end
             if(isempty(obj.ySimUKF))
                 obj.ySimUKF = [obj.nodePoints; zeros(size(obj.nodePoints))];
-                obj.P = eye((nUKF-1)/2);
+                obj.P = 0.8*eye((nUKF-1)/2);
                 lastContact = repmat(obj.nodePoints(:,1:2),1,nUKF);
             else
                 y = obj.ySimUKF;
@@ -324,8 +324,8 @@ classdef TensegrityStructure < handle
             X(fN,:) = repmat(xx(fN,:),1,nUKF); %Used to keep fixed nodes in place
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
             
-            Q_noise = 0.15^2*eye(L); %process noise covariance matrix
-            R_noise = blkdiag(0.01^2*eye(6),0.05^2*eye(m-6)); %measurement noise covariance matrix
+            Q_noise = 0.3^2*eye(L); %process noise covariance matrix
+            R_noise = blkdiag(0.01^2*eye(6),0.1^2*eye(m-6)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;
@@ -361,7 +361,7 @@ classdef TensegrityStructure < handle
             P1 = X2*diag(Wc)*X2'+Q_noise; %State covariance?
             
             %%%%%%%%%%%%% Unscented Transformation of Measurements %%%%%%%%
-            barVec = memberNodeXYZ((obj.ss+1):(obj.bb+obj.ss),:);
+            barVec = -memberNodeXYZ((obj.ss+1):(obj.bb+obj.ss),:);
             barNorm = sqrt(barVec(:,ind1).^2 + barVec(:,ind2).^2 + barVec(:,ind3).^2);
             barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
             
@@ -378,6 +378,7 @@ classdef TensegrityStructure < handle
             K=P12/P2;                                   %kalman gain
             x=x1+K*(z-z1);                              %state update
             disp(z')
+            disp(z1')
             obj.P = P1 -K*P12';                         %covariance update
             obj.ySimUKF = reshape(x,[],3);
             
