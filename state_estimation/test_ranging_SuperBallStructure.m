@@ -8,9 +8,9 @@ totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
 lims = 3*1.2*barLength;
 gravity = 9.81;             % m/s^2
-tspan =0.1;                % time between plot updates in seconds
+tspan =0.05;                % time between plot updates in seconds
 delT = 0.001;               % timestep for dynamic sim in seconds
-delTUKF  = 0.0025;
+delTUKF  = 0.005;
 Kp = 998;                   %passive string stiffness in Newtons/meter
 Ka = 3150;                  %active string stiffness in Newtons/meter
 preTension = 100*(barLength/1.7);                   % how much force to apply to each cable in Newtons
@@ -45,10 +45,10 @@ nodes = [barSpacing     -barLength*0.5   0;
          barLength*0.5   0              -barSpacing;
         -barLength*0.5   0              -barSpacing];
      
-HH  = makehgtform('axisrotate',[0 1 0],0.);
-HH  = makehgtform('axisrotate',[1 0 0],0.)*HH;
+HH  = makehgtform('axisrotate',[0 1 0],0.6);
+HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
 nodes = (HH(1:3,1:3)*nodes')';
-nodes(:,3) = nodes(:,3) - min(nodes(:,3)) +5;  
+nodes(:,3) = nodes(:,3) - min(nodes(:,3)) +0.1;  
 nodes(:,2) = nodes(:,2) - 0.95 ;
 nodes(:,1) = nodes(:,1) - 0.95 ;
 %nodes
@@ -79,7 +79,7 @@ superBall = TensegrityStructure(nodes, strings, bars, F, stringStiffness,...
 superBall.baseStationPoints = baseStationPoints;
 f = figure('units','normalized','outerposition',[0 0 1 1]);
 
-%%%%%%%% IK Subplot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% IK Subplot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%ros%%
 ax1 = subplot(1,2,1,'Parent',f,'units','normalized','outerposition',...
     [0.01 0.1 0.48 0.9]);
 % use a method within TensegrityPlot class to generate a plot of the
@@ -122,14 +122,14 @@ title('UKF Output');
 
 superBallUpdate(superBall,superBallCommandPlot,superBallDynamicsPlot,tspan,[ax1 ax2],barLength);
 
-% testPublisher = rospublisher('/ranging_data_matlab','std_msgs/Float32MultiArray','IsLatching',false);
-% testMsg = rosmessage(testPublisher);
+testPublisher = rospublisher('/ranging_data_matlab','std_msgs/Float32MultiArray','IsLatching',false);
+testMsg = rosmessage(testPublisher);
 
 %funcHandle = @(vec) superBallUpdate(vec); % passing ROS data to update Function
 rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(msg.Data));
 
-% testMsg.Data = [(1 + (-1-1).*rand(1,120))]+[1.5*ones(1,66) 3*ones(1,48) 2.1478  2.1385   0.9637   2.1856  0.9918  0.9603];
-% send(testPublisher,testMsg);
+testMsg.Data = [(0.5 + (-0.5-0.5).*rand(1,120))]+[1*ones(1,66) 2.5*ones(1,48) 0 0 0 0 0 0];
+send(testPublisher,testMsg);
 
 % % 
 

@@ -5,7 +5,7 @@ function superBallUpdate(superBall1,superBallDynamicsPlot1,superBallUKFPlot1,tsp
 % superBall is used to pass both the initalized superBall as well as update data
 
 %create some persistent variables for objects and structs
-persistent superBall superBallDynamicsPlot superBallUKFPlot tspan allMeasureIndices lambdaErrors bars i ax barLength
+persistent superBall superBallDynamicsPlot superBallUKFPlot tspan allMeasureIndices lambdaErrors bars i ax barLength testPublisher testMsg
 
 if nargin>1
     i = 0;
@@ -25,8 +25,8 @@ if nargin>1
     barLength = barLength1;
     
     %%%% Testing %%
-%     testPublisher = rospublisher('/ranging_data_matlab','std_msgs/Float32MultiArray','IsLatching',false);
-%     testMsg = rosmessage(testPublisher);
+    testPublisher = rospublisher('/ranging_data_matlab','std_msgs/Float32MultiArray','IsLatching',false);
+    testMsg = rosmessage(testPublisher);
     %%%%%%%%%
 else if nargin==1
         msgData = superBall1;
@@ -37,11 +37,25 @@ else if nargin==1
                   %11+10%  %9+8%  %7+6%  %5+4%  %3+2%
         isBar = [1       22     39     52     61     66];
         rangingMeasures(isBar) = barLength+3.5;
+        
+        %%%% SETS ALL MEASUREMENTS TO ZERO %%%%%%%%%%%%%
+        rangingMeasures(~isBar) = 0;
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
         allAngleMeasures = msgData(end-5: end);
         allAngleMeasures(isnan(allAngleMeasures)) = 0;
         angleMeasures = allAngleMeasures;
         rangingMeasures(isnan(rangingMeasures)) = 0;
         isNewMeasurement = rangingMeasures>0 & rangingMeasures<6 ;
+        
+        %%% FEED SIMULATED ANGLE TO UKF %%%%%%%%%%%%%%%%%
+        
+        dynamicsUpdate(superBall,tspan);
+        actualNodes =  superBall.ySim(1:end/2,:);
+        barVec = actualNodes(bars(1,:),:) - actualNodes(bars(2,:),:);
+        barNorm = sqrt(barVec(:,1).^2 + barVec(:,2).^2 + barVec(:,3).^2);
+        barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
+        superBallDynamicsPlot.nodePoints = actualNodes ;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         %%%%%%%%%%%%Input Measurements and commands %%%%%%%%%%%%
@@ -51,7 +65,7 @@ else if nargin==1
         %goodOffsets = allOffsets(:,isNewMeasurement);
         goodLengths = rangingMeasures(isNewMeasurement) - 3.5;
        % disp([angleMeasures; goodLengths]')
-        superBall.measurementUKFInput = [angleMeasures; goodLengths]; %UKF measures
+        superBall.measurementUKFInput = [barAngleFromVert; goodLengths]; %UKF measures
         
         %superBall.lengthMeasureIndices = [bars workingMeasureIndices];
         %superBall.measurementUKFInput =[barAngleFromVert; barLength*ones(6,1); (lengthMeasures)];
@@ -61,13 +75,14 @@ else if nargin==1
         ukfUpdate(superBall,tspan);
         superBallUKFPlot.nodePoints = superBall.ySimUKF(1:end/2,:);
         updatePlot(superBallUKFPlot);
+        updatePlot(superBallDynamicsPlot);
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %         drawnow  %plot it up
         
         %%%% Testing %%
-%         testMsg.Data = [(1 + (-1-1).*rand(1,120))]+[1.5*ones(1,66) 3*ones(1,48) 2.1478  2.1385   0.9637   2.1856  0.9918  0.9603];
-%         send(testPublisher,testMsg);
+        testMsg.Data = [(0.5 + (-0.5-0.5).*rand(1,120))]+[1*ones(1,66) 2.5*ones(1,48) barAngleFromVert];
+        send(testPublisher,testMsg);
         %%%%%%%%%
         
     else
