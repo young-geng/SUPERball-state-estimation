@@ -5,7 +5,7 @@ function superBallUpdate(superBall1,superBallDynamicsPlot1,superBallUKFPlot1,tsp
 % superBall is used to pass both the initalized superBall as well as update data
 
 %create some persistent variables for objects and structs
-persistent superBall superBallDynamicsPlot superBallUKFPlot tspan allMeasureIndices lambdaErrors bars i ax barLength
+persistent superBall superBallDynamicsPlot superBallUKFPlot tspan allMeasureIndices lambdaErrors bars i ax barLength testPublisher testMsg
 
 if nargin>1
     i = 0;
@@ -15,7 +15,7 @@ if nargin>1
     tspan = tspan1;
     internalMeasureIndices = [1*ones(1,11), 2*ones(1,10), 3*ones(1,9), 4*ones(1,8), 5*ones(1,7), 6*ones(1,6), 7*ones(1,5), 8*ones(1,4), 9*ones(1,3), 10*ones(1,2), 11*ones(1,1);
                               2:12,         3:12,         4:12,         5:12,         6:12,         7:12,         8:12,         9:12,       10:12,       11:12,        12:12];
-                          externalMeasureIndices = [1*ones(1,4), 2*ones(1,4), 3*ones(1,4), 4*ones(1,4), 5*ones(1,4), 6*ones(1,4), 7*ones(1,4), 8*ones(1,4), 9*ones(1,4), 10*ones(1,4), 11*ones(1,4), 12*ones(1,4);
+    externalMeasureIndices = [1*ones(1,4), 2*ones(1,4), 3*ones(1,4), 4*ones(1,4), 5*ones(1,4), 6*ones(1,4), 7*ones(1,4), 8*ones(1,4), 9*ones(1,4), 10*ones(1,4), 11*ones(1,4), 12*ones(1,4);
                               13:16,        13:16,        13:16,       13:16,       13:16,       13:16,       13:16,       13:16,       13:16,       13:16,        13:16,      13:16];    
     allMeasureIndices = [internalMeasureIndices externalMeasureIndices];
     bars = [superBall.barNodes];
@@ -23,6 +23,11 @@ if nargin>1
     lambdaErrors = 0.05*randn(size(allMeasureIndices,2),1);
     ax = ax1;
     barLength = barLength1;
+    
+    %%%% Testing %%
+    testPublisher = rospublisher('/ranging_data_matlab','std_msgs/Float32MultiArray','IsLatching',false);
+    testMsg = rosmessage(testPublisher);
+    %%%%%%%%%
 else if nargin==1
         msgData = superBall1;
         allOffsets = 3.5*ones(1,length(allMeasureIndices));
@@ -55,6 +60,14 @@ else if nargin==1
         ukfUpdate(superBall,tspan);
         superBallUKFPlot.nodePoints = superBall.ySimUKF(1:end/2,:);
         updatePlot(superBallUKFPlot);
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        drawnow  %plot it up
+        
+        %%%% Testing %%
+        testMsg.Data = [(1 + (-1-1).*rand(1,120))]+[1.5*ones(1,66) 3*ones(1,48) 2.1478  2.1385   0.9637   2.1856  0.9918  0.9603];
+        send(testPublisher,testMsg);
+        %%%%%%%%%
         
     else
         i = i+1;
