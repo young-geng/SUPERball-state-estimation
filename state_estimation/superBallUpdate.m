@@ -5,7 +5,7 @@ function superBallUpdate(superBall1,superBallDynamicsPlot1,superBallUKFPlot1,tsp
 % superBall is used to pass both the initalized superBall as well as update data
 
 %create some persistent variables for objects and structs
-persistent superBall superBallDynamicsPlot superBallUKFPlot tspan allMeasureIndices lambdaErrors bars i ax barLength testPublisher testMsg
+persistent superBall superBallDynamicsPlot superBallUKFPlot tspan allMeasureIndices lambdaErrors bars i ax barLength
 
 if nargin>1
     i = 0;
@@ -25,8 +25,8 @@ if nargin>1
     barLength = barLength1;
     
     %%%% Testing %%
-    testPublisher = rospublisher('/ranging_data_matlab','std_msgs/Float32MultiArray','IsLatching',false);
-    testMsg = rosmessage(testPublisher);
+%     testPublisher = rospublisher('/ranging_data_matlab','std_msgs/Float32MultiArray','IsLatching',false);
+%     testMsg = rosmessage(testPublisher);
     %%%%%%%%%
 else if nargin==1
         msgData = superBall1;
@@ -40,11 +40,12 @@ else if nargin==1
         allAngleMeasures = msgData(end-5: end);
         allAngleMeasures(isnan(allAngleMeasures)) = 0;
         angleMeasures = allAngleMeasures;
+        rangingMeasures(isnan(rangingMeasures)) = 0;
         isNewMeasurement = rangingMeasures>0 & rangingMeasures<6 ;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         %%%%%%%%%%%%Input Measurements and commands %%%%%%%%%%%%
-        %superBall.simStructUKF.stringRestLengths; %TODO: Need to implement this later
+        %superBall.simStructUKF.stringRestLengths; %TODO: Need to implement this
         
         superBall.lengthMeasureIndices = allMeasureIndices(:,isNewMeasurement);
         %goodOffsets = allOffsets(:,isNewMeasurement);
@@ -62,11 +63,11 @@ else if nargin==1
         updatePlot(superBallUKFPlot);
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        drawnow  %plot it up
+%         drawnow  %plot it up
         
         %%%% Testing %%
-        testMsg.Data = [(1 + (-1-1).*rand(1,120))]+[1.5*ones(1,66) 3*ones(1,48) 2.1478  2.1385   0.9637   2.1856  0.9918  0.9603];
-        send(testPublisher,testMsg);
+%         testMsg.Data = [(1 + (-1-1).*rand(1,120))]+[1.5*ones(1,66) 3*ones(1,48) 2.1478  2.1385   0.9637   2.1856  0.9918  0.9603];
+%         send(testPublisher,testMsg);
         %%%%%%%%%
         
     else
