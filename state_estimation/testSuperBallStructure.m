@@ -8,7 +8,7 @@ barLength = 1.7;
 lims = 1.2*barLength;
 gravity = 9.81; % m/s^2
 tspan =0.05;          % time between plot updates in seconds
-delT = 0.001;         % timestep for dynamic sim in seconds
+delT = 0.0025;         % timestep for dynamic sim in seconds
 delTUKF  = 0.01;
 K = 998;              %outer rim string stiffness in Newtons/meter
 nodalMass = 1.625*ones(12,1);
@@ -59,12 +59,7 @@ lengthMeasureIndices = [2*ones(1,1), 3*ones(1,2), 4*ones(1,3), 5*ones(1,4), 6*on
 lengthMeasureIndices([1 6 15 28 45 66],:) = []; %eliminate bar measures
 superBallCommandPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
 N = 5;
-% stringsMult = strings;
-% barsMult = bars;
-% for i = 1:N-1
-%     stringsMult = [stringsMult strings+12*(i)];
-%     barsMult = [barsMult bars+12*(i)];
-% end
+
 superBallDynamicsPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
 superBall = TensegrityStructure(nodes, strings, bars, F, stringStiffness,...
     barStiffness, stringDamping,barDamping, nodalMass, delT,delTUKF,stringRestLength,gravity);
@@ -113,7 +108,7 @@ zlim(1.6*[-0.01 lims])
 title('UKF Output');
 superBallUpdate(superBall,superBallCommandPlot,superBallDynamicsPlot,tspan,[ax1 ax2]);
 
-for i = 1:200
+for i = 1:1000
     superBallUpdate
   %  MM(i) = getframe(f);
 end

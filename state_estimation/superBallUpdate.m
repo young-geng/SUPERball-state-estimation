@@ -19,7 +19,7 @@ if nargin>1
     allMeasureIndices(:,[1 6 15 28 45 66]) = []; %eliminate bar measures
     lambdaErrors = 0.05*randn(size(allMeasureIndices,2),1); 
     ax = ax1;
-    disp(lambdaErrors);
+   % disp(lambdaErrors);
 end
 i = i+1;
 %%%%%%%%%%%%%%%%%% update Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -30,12 +30,12 @@ i = i+1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%Compute Command and update dynamics $%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if(mod(i,2)==0)
-currentWorkingLengths = unique(round(rand(100,1)*107))+1;
+if(mod(i,1)==0)
+currentWorkingLengths = unique(round(rand(00,1)*107))+1;
 else
     currentWorkingLengths = unique(round(rand(0,1)*107))+1;
 end
-disp(length(currentWorkingLengths))
+%disp(length(currentWorkingLengths))
 workingMeasureIndices = allMeasureIndices(:,currentWorkingLengths);
 superBall.lengthMeasureIndices = [bars workingMeasureIndices];
 dynamicsUpdate(superBall,tspan);
@@ -46,7 +46,7 @@ barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
 
 LI =  workingMeasureIndices;
 lengthNoise = randn(size(LI,2),1)*0.05;
-tiltNoise = 0.01*randn(6,1);
+tiltNoise = 5/180*pi*randn(6,1);
 yyPlusBase = [actualNodes; superBall.baseStationPoints];
 allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
 z = sqrt(sum(allVectors,2));

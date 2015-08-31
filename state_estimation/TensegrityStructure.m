@@ -312,8 +312,9 @@ classdef TensegrityStructure < handle
             lambda=alpha^2*(L+ki)-L;
             c=L+lambda;
             Ws=[lambda/c , (0.5/c)*ones(1,2*L)];
+            Ws = ones(size(Ws))/length(Ws);
             fN = sim.fN;
-            Wc=Ws;  Wc(1) = Wc(1)+(1-alpha^2+beta^2);
+            Wc=Ws;  %Wc(1) = Wc(1)+(1-alpha^2+beta^2);
             rk=sqrt(c);
             
             %Compute the UKF sigmas
@@ -323,7 +324,7 @@ classdef TensegrityStructure < handle
             X(fN,:) = repmat(xx(fN,:),1,nUKF); %Used to keep fixed nodes in place
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
             
-            Q_noise = 0.0015^2*eye(L); %process noise covariance matrix
+            Q_noise = 0.15^2*eye(L); %process noise covariance matrix
             R_noise = blkdiag(0.01^2*eye(6),0.05^2*eye(m-6)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -376,6 +377,7 @@ classdef TensegrityStructure < handle
             P12=X2*diag(Wc)*Z2';                        %Transformed cross covariance matrix
             K=P12/P2;                                   %kalman gain
             x=x1+K*(z-z1);                              %state update
+            disp(z')
             obj.P = P1 -K*P12';                         %covariance update
             obj.ySimUKF = reshape(x,[],3);
             
