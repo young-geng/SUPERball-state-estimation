@@ -3,10 +3,10 @@ clc
 clear all 
 close all
 
-barLength = 1.7;
+barLength = 1.6;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
-lims = 1.2*barLength;
+lims = 2*barLength;
 gravity = 9.81;             % m/s^2
 tspan =0.1;                % time between plot updates in seconds
 delT = 0.001;               % timestep for dynamic sim in seconds
@@ -24,41 +24,40 @@ barStiffness = 100000*ones(6,1);
 stringDamping = [Ca*ones(12,1); Cp*ones(12,1)];     % string damping vector
 
 options = optimoptions('quadprog','Algorithm',  'interior-point-convex','Display','off');
-addpath('..\tensegrityObjects')
-
-% baseStationPoints = [0+0.96/2     ,   0-1.15/2      ,  1.63;
-%                          -1.362+0.96/2  ,   0-1.15/2      ,  1.6606 ;  
-%                          -2.4712+0.96/2  ,  1.1885-1.15/2 ,  1.9514;  
-%                           0.2882+0.96/2  ,  2.4010-1.15/2  ,  1.8013;  
-%                          -1.0626+0.96/2   , 2.4519-1.15/2 ,  1.7435 ];  
+ 
 baseStationPoints = [-2.3800   -0.9800    2.4300;
                      -3.3800         0    0.3500;
                            0         0    0.3500;
-                     -0.7039   -2.1896    0.3500];                       
+                     -0.7039   -2.1896    0.3500];
+labels = {'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'};
 
                      
-nodes = [barSpacing     -barLength*0.5   0;
-         barSpacing      barLength*0.5   0;
-         0               barSpacing      barLength*0.5;
-         0               barSpacing     -barLength*0.5;
-         barLength*0.5   0               barSpacing;
-        -barLength*0.5   0               barSpacing;
-        -barSpacing      barLength*0.5   0;
-        -barSpacing     -barLength*0.5   0;
-         0              -barSpacing      barLength*0.5;
-         0              -barSpacing     -barLength*0.5; 
-         barLength*0.5   0              -barSpacing;
-        -barLength*0.5   0              -barSpacing];
+nodes = [barSpacing      0 -barLength*0.5;
+         barSpacing      0  barLength*0.5;
+         
+          0  barLength*0.5              barSpacing;   %5
+        0 -barLength*0.5               barSpacing;
+         barLength*0.5               barSpacing      0;
+         -barLength*0.5               barSpacing     0;      
+        -barSpacing    0  barLength*0.5   ;
+        -barSpacing    0  -barLength*0.5   ;             %8
+        
+        
+         0  barLength*0.5              -barSpacing;
+         0  -barLength*0.5             -barSpacing;
+         barLength*0.5              -barSpacing     0;    
+         -barLength*0.5              -barSpacing      0;
+                                               ];
      
-HH  = makehgtform('axisrotate',[1 1 0],-0.3);
-     nodes = (HH(1:3,1:3)*nodes')';
-nodes(:,3) = nodes(:,3) +barLength*0.5 ;    
-% HH  = makehgtform('axisrotate',[0 1 0],0.6);
-% HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
-% nodes = (HH(1:3,1:3)*nodes')';
-% nodes(:,3) = nodes(:,3) - min(nodes(:,3)) +0.1;  
-% nodes(:,2) = nodes(:,2) - 0.95 ;
-% nodes(:,1) = nodes(:,1) - 0.95 ;
+%HH  = makehgtform('axisrotate',[1 1 0],-0.3);
+%    nodes = (HH(1:3,1:3)*nodes')';
+%nodes(:,3) = nodes(:,3) +barLength*0.5 ;    
+HH  = makehgtform('axisrotate',[0 1 0],0.6);
+HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
+nodes = (HH(1:3,1:3)*nodes')';
+nodes(:,3) = nodes(:,3) - min(nodes(:,3));  
+nodes(:,2) = nodes(:,2) - 0.95 ;
+nodes(:,1) = nodes(:,1) - 0.95 ;
 
 bars = [1:2:11; 
         2:2:12];
@@ -86,34 +85,37 @@ superBall.baseStationPoints = baseStationPoints;
 f = figure('units','normalized','outerposition',[0 0 1 1]);
 
 %%%%%%%% IK Subplot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-ax1 = subplot(1,2,1,'Parent',f,'units','normalized','outerposition',...
-    [0.01 0.1 0.48 0.9]);
-% use a method within TensegrityPlot class to generate a plot of the
-% structure
-generatePlot(superBallCommandPlot,ax1)
-updatePlot(superBallCommandPlot);
-%settings to make it pretty
-axis equal
-view(3)
-grid on
-light('Position',[0 0 10],'Style','local')
-%lighting flat
-lighting flat
-colormap([0.8 0.8 1; 0 1 1])
-xlim([-lims lims])
-ylim([-lims lims])
-zlim(1.6*[-0.01 lims])
-title('Simulated Input');
-
+% ax1 = subplot(1,2,1,'Parent',f,'units','normalized','outerposition',...
+%     [0.01 0.1 0.48 0.9]);
+% % use a method within TensegrityPlot class to generate a plot of the
+% % structure
+% generatePlot(superBallCommandPlot,ax1)
+% updatePlot(superBallCommandPlot);
+% %settings to make it pretty
+% axis equal
+% view(3)
+% grid on
+% light('Position',[0 0 10],'Style','local')
+% %lighting flat
+% lighting flat
+% colormap([0.8 0.8 1; 0 1 1])
+% xlim([-lims lims])
+% ylim([-lims lims])
+% zlim(1.6*[-0.01 lims])
+% title('Simulated Input');
+% 
 
 %%%%%% Dynamics Subplot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-ax2 = subplot(1,2,2,'Parent',f,'units','normalized','outerposition',...
-    [0.51 0.1 0.48 0.9]);
 
+ax2 = axes;%subplot(1,2,2,'Parent',f,'units','normalized','outerposition',...
+    %[0.51 0.1 0.48 0.9]);
+colormap([0.8 0.8 1; 0 1 1])
 % use a method within TensegrityPlot class to generate a plot of the
 % structure
 generatePlot(superBallDynamicsPlot,ax2);
 updatePlot(superBallDynamicsPlot);
+scatter3(baseStationPoints(:,1),baseStationPoints(:,2),baseStationPoints(:,3),'fill','m');
+hh = text([nodes(:,1);baseStationPoints(:,1)],[nodes(:,2);baseStationPoints(:,2)],[nodes(:,3);baseStationPoints(:,3)]+0.1,labels,'FontSize',6);
 
 %settings to make it pretty
 axis equal
@@ -123,32 +125,19 @@ light('Position',[0 0 10]);%,'Style','local')
 lighting flat
 xlim([-lims lims])
 ylim([-lims lims])
-zlim(1.6*[-0.01 lims])
+zlim(0.8*[-0.01 lims])
 title('UKF Output');
 xlabel('X')
 ylabel('Y')
 zlabel('Z')
-superBallUpdate(superBall,superBallCommandPlot,superBallDynamicsPlot,tspan,[ax1 ax2]);
-
+ax1  = ax2;
+superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength);
 rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
-
+lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 % for i = 1:1000
 %     superBallUpdate
 %   %  MM(i) = getframe(f);
 % end
-%filename = 'quickAnimation.avi';
-%writerObj = VideoWriter(filename);
-%writerObj.FrameRate = 20;
-%open(writerObj);
-%writeVideo(writerObj,MM);
-%close(writerObj);
-% 
-% t = timer;
-% t.TimerFcn = @(myTimerObj, thisEvent) superBallUpdate;
-% t.Period = tspan;
-% t.ExecutionMode = 'fixedRate';
-% start(t);
-% 
-% % % 
+
 
 

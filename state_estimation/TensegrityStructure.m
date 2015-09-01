@@ -325,7 +325,7 @@ classdef TensegrityStructure < handle
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
             
             Q_noise = 0.3^2*eye(L); %process noise covariance matrix
-            R_noise = blkdiag(0.01^2*eye(6),0.1^2*eye(m-6)); %measurement noise covariance matrix
+            R_noise = blkdiag(0.01^2*eye(6),0.05^2*eye(m-6)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;
@@ -377,8 +377,11 @@ classdef TensegrityStructure < handle
             P12=X2*diag(Wc)*Z2';                        %Transformed cross covariance matrix
             K=P12/P2;                                   %kalman gain
             x=x1+K*(z-z1);                              %state update
-            disp(z')
-            disp(z1')
+            fprintf('%7.2f', z(7:end)')
+            %disp(round((z1-z)',2))
+            fprintf('\r\n')
+%             fprintf('%7.2f', (z1-z)')
+%             fprintf('\r\n')
             obj.P = P1 -K*P12';                         %covariance update
             obj.ySimUKF = reshape(x,[],3);
             
@@ -406,7 +409,6 @@ classdef TensegrityStructure < handle
                 staticF = kFP*(lastContact - nodeXYZs(:,ind12)) - kFD*xyDot;
                 staticNotApplied = ((staticF(:,ind11).^2 +  staticF(:,ind22).^2) > (muS*normForces).^2)|notTouching;
                 staticF(staticNotApplied(:,Gindex)) = 0;
-                staticF = (staticF);
                 w = (1 - exp(-kk*xyDotMag))./xyDotMag;
                 w(xyDotMag<1e-9) = kk;
                 dynamicFmag =  - muD * normForces .*w ;

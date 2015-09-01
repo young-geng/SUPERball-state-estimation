@@ -80,13 +80,11 @@ classdef TensegrityPlot < handle
             [xx,yy,zz] = sphere(9); xx = xx*obj.barRad; yy = yy*obj.barRad; zz = zz*obj.barRad;
             obj.sphereTForm = gobjects(obj.n,1);
             hold(ax,'on');
+            
+            colorFace = hsv(13);
             for i = 1:obj.n            
-                if i == 1
                     sphereHandle = surf(ax,2*xx,2*yy,2*zz,'LineStyle', 'none');
-                    set(sphereHandle,'FaceColor','r');
-                else
-                    sphereHandle = surf(ax,xx,yy,zz,'LineStyle', 'none');
-                end
+                    set(sphereHandle,'FaceColor',colorFace(i,:));
                 obj.sphereTForm(i) = hgtransform('Parent',ax);
                 set(sphereHandle,'Parent',obj.sphereTForm(i))
                 set(obj.sphereTForm(i),'matrix',makehgtform('translate',obj.nodePoints(i,:)));
