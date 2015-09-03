@@ -44,6 +44,7 @@ classdef TensegrityStructure < handle
         P
         lengthMeasureIndices
         baseStationPoints
+        goodAngles
         
     end
     
@@ -323,9 +324,9 @@ classdef TensegrityStructure < handle
             xx = reshape(x,obj.n*2,[]); %precursor to keep fixed nodes in place
             X(fN,:) = repmat(xx(fN,:),1,nUKF); %Used to keep fixed nodes in place
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
-            
-            Q_noise = 0.3^2*eye(L); %process noise covariance matrix
-            R_noise = blkdiag(0.01^2*eye(6),0.05^2*eye(m-6)); %measurement noise covariance matrix
+            nAngle = sum(obj.goodAngles);
+            Q_noise = blkdiag(0.3^2*eye(L/2),0.3^2*eye(L/2)); %process noise covariance matrix
+            R_noise = blkdiag(0.01^2*eye(nAngle),0.05^2*eye(m-nAngle)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;
@@ -368,7 +369,8 @@ classdef TensegrityStructure < handle
             yyPlusBase = [xyzNodes; repmat(obj.baseStationPoints,1,nUKF)];
             allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
             lengthMeasures = sqrt(allVectors(:,ind1) + allVectors(:,ind2) + allVectors(:,ind3));
-            Z1 = [barAngleFromVert;
+            
+            Z1 = [barAngleFromVert(obj.goodAngles,:);
                 lengthMeasures];
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]);
             z1 = Z1*Ws';                                %Weighted average of forward propagated measurements
@@ -377,11 +379,10 @@ classdef TensegrityStructure < handle
             P12=X2*diag(Wc)*Z2';                        %Transformed cross covariance matrix
             K=P12/P2;                                   %kalman gain
             x=x1+K*(z-z1);                              %state update
-            fprintf('%7.2f', z(7:end)')
-            %disp(round((z1-z)',2))
+            fprintf('%7.2f', z(1:nAngle))
             fprintf('\r\n')
-%             fprintf('%7.2f', (z1-z)')
-%             fprintf('\r\n')
+            fprintf('%7.2f', (z1(1:nAngle)))
+            fprintf('\r\n')
             obj.P = P1 -K*P12';                         %covariance update
             obj.ySimUKF = reshape(x,[],3);
             
