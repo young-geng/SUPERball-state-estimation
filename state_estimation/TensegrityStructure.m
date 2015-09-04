@@ -325,8 +325,8 @@ classdef TensegrityStructure < handle
             X(fN,:) = repmat(xx(fN,:),1,nUKF); %Used to keep fixed nodes in place
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
             nAngle = sum(obj.goodAngles);
-            Q_noise = blkdiag(0.3^2*eye(L/2),0.3^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.01^2*eye(nAngle),0.05^2*eye(m-nAngle)); %measurement noise covariance matrix
+            Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
+            R_noise = blkdiag(0.01^2*eye(nAngle),0.04^2*eye(m-nAngle)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;

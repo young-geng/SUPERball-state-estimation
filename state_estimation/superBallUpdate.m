@@ -3,7 +3,7 @@ function superBallUpdate(superBall1,superBallUKFPlot1,tspan1,ax1,text1,barlength
 %   Detailed explanation goes here
 
 %create some persistent variables for objects and structs
-persistent superBall superBallUKFPlot tspan allMeasureIndices ax i texth barlength lines
+persistent superBall superBallUKFPlot tspan allMeasureIndices ax i texth barlength lines dtSinceLastGoodLength lastUpdatedRangingMeasures
 if nargin>1
     i = 0;
     superBall = superBall1;
@@ -18,36 +18,43 @@ if nargin>1
     texth = text1;
     barlength = barlength1;
     lines = lines1;
-    lastAngles = zeros(6,1);
+    dtSinceLastGoodLength = ones(size(allMeasureIndices,2),1);
+    lastUpdatedRangingMeasures = dtSinceLastGoodLength;
+    
 else if nargin == 1
+        
         i = i+1;
         msgData = superBall1;
         
+        
+        
         %%%%%%%%%%%%%Process message data %%%%%%%%%%%%%%%%%%%%%
         % Most of the processing is done before it reaches MATLAB
-        rangingMeasures = msgData(1:end-6);
+        rangingMeasures = msgData(1:end-(6+12));
+        updateVel = zeros(size(rangingMeasures));
         isBar = [1, 22, 39, 52, 61, 66];
         isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
         rangingMeasures(isInternal) = 0;
-        rangingMeasures(isBar) = barlength + 3.9;
-        
-        
-        %%%% SETS ALL MEASUREMENTS TO ZERO %%%%%%%%%%%%%
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
-        allAngleMeasures = msgData(end-5: end);
+        rangingMeasures(isBar) = barlength + 3.9;       
+        rangingMeasures(isnan(rangingMeasures)) = 0;
+        isNewMeasurement = rangingMeasures > 0;
+        updateVel(isNewMeasurement) = (rangingMeasures(isNewMeasurement) - lastUpdatedRangingMeasures(isNewMeasurement))./(dtSinceLastGoodLength(isNewMeasurement)*tspan);
+        isUpdatedMeasurement = isNewMeasurement & abs(updateVel) < 1;
+        dtSinceLastGoodLength = dtSinceLastGoodLength + 1;
+        dtSinceLastGoodLength(isUpdatedMeasurement) = 1; 
+        lastUpdatedRangingMeasures(isUpdatedMeasurement) = rangingMeasures(isUpdatedMeasurement);
+                     
+        allAngleMeasures = msgData((end-(5+12)): (end-12));
         isGoodAngle = ~isnan(allAngleMeasures);
         superBall.goodAngles = isGoodAngle;
         %disp(allAngleMeasures);
         angleMeasures = allAngleMeasures(isGoodAngle);
-        rangingMeasures(isnan(rangingMeasures)) = 0;
-        isNewMeasurement = rangingMeasures>0 & rangingMeasures<12 ;
 
         %%%%%%%%%%%%Input Measurements and commands %%%%%%%%%%%%
         %superBall.simStructUKF.stringRestLengths; %TODO: Need to implement this
         
-        superBall.lengthMeasureIndices = allMeasureIndices(:,isNewMeasurement);
-        goodLengths = rangingMeasures(isNewMeasurement) - 3.9;
+        superBall.lengthMeasureIndices = allMeasureIndices(:,isUpdatedMeasurement);
+        goodLengths = rangingMeasures(isUpdatedMeasurement) - 3.9;
         superBall.measurementUKFInput = [angleMeasures; goodLengths]; %UKF measures
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
@@ -97,7 +104,7 @@ else if nargin == 1
 
         for j = 1: 48
             texth(j+16).Position = (lengthMeasures(2*j-1,:) + lengthMeasures(2*j,:)*3)/4;
-            if(isNewMeasurement(measureLines(j)))
+            if(isUpdatedMeasurement(measureLines(j)))
             texth(j+16).String = num2str(rangingMeasures(measureLines(j))-3.9,2);
             else
                 lengthMeasures(2*j-1,:) = lengthMeasures(2*j,:);

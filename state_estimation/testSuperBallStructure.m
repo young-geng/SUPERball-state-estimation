@@ -3,14 +3,14 @@ clc
 clear all
 close all
 
-barLength = 1.6;
+barLength = 1.625;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
 lims = 2*barLength;
 gravity = 9.81;             % m/s^2
 tspan =0.1;                % time between plot updates in seconds
 delT = 0.001;               % timestep for dynamic sim in seconds
-delTUKF  = 0.0025;
+delTUKF  = 0.005;
 Kp = 998;                   %passive string stiffness in Newtons/meter
 Ka = 3150;                  %active string stiffness in Newtons/meter
 preTension = 100*(barLength/1.7);                   % how much force to apply to each cable in Newtons
@@ -58,10 +58,10 @@ nodes(:,1) = nodes(:,1) - 0.95 ;
 bars = [1:2:11;
     2:2:12];
 strings = [2 5 9  8 12 4  1 11 10 3 7 6 1 1 11 11 10 10 3 3 7  7 6 6;
-    5 9 8 12  4 2 11 10  1 7 6 3 9 5  2  4 12  8 5 2 4 12 8 9];
+           5 9 8 12  4 2 11 10  1 7 6 3 9 5  2  4 12  8 5 2 4 12 8 9];
 
 stringRestLength = [(1-(preTension/Ka))*ones(12,1)*norm(nodes(2,:)-nodes(5,:)); %active
-    (1-(preTension/Kp))*ones(12,1)*norm(nodes(2,:)-nodes(5,:))]; %passive
+                                                              0.865*ones(12,1)]; %passive
 
 lengthMeasureIndices = [
     2*ones(1,1), 3*ones(1,2), 4*ones(1,3), 5*ones(1,4), 6*ones(1,5), ...
@@ -149,6 +149,7 @@ ylabel('Y')
 zlabel('Z')
 ax1  = ax2;
 superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines);
+
 rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 
