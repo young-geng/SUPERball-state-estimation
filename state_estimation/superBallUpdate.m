@@ -24,13 +24,22 @@ if nargin>1
 else if nargin == 1
         
         i = i+1;
+        numMotorPos = 12;
         msgData = superBall1;
-        
-        
-        
+        motorPos = msgData(end - (numMotorPos-1) : end);
+        restLengths = 1                - abs((0.009      *  1000/109)*motorPos);
+        %             0 radian length  drive Shaft Radius   dumb ros scaling 
+
+        newRestLength = ~isnan(restLengths);
+        indexRest = 1:numMotorPos; 
+        indexRest = indexRest(newRestLength);
+        goodRestLengths = restLengths(indexRest);
+        superBall.simStructUKF.stringRestLengths(indexRest,:) = goodRestLengths(:,ones(1,145)) ;
+        %disp(superBall.simStructUKF.stringRestLengths);
         %%%%%%%%%%%%%Process message data %%%%%%%%%%%%%%%%%%%%%
         % Most of the processing is done before it reaches MATLAB
-        rangingMeasures = msgData(1:end-(6+12));
+
+        rangingMeasures = msgData(1:end-(6+numMotorPos));
         updateVel = zeros(size(rangingMeasures));
         isBar = [1, 22, 39, 52, 61, 66];
         isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
@@ -44,10 +53,9 @@ else if nargin == 1
         dtSinceLastGoodLength(isUpdatedMeasurement) = 1; 
         lastUpdatedRangingMeasures(isUpdatedMeasurement) = rangingMeasures(isUpdatedMeasurement);
                      
-        allAngleMeasures = msgData((end-(5+12)): (end-12));
+        allAngleMeasures = msgData((end-(5+numMotorPos)): (end-numMotorPos));
         isGoodAngle = ~isnan(allAngleMeasures);
         superBall.goodAngles = isGoodAngle;
-        %disp(allAngleMeasures);
         angleMeasures = allAngleMeasures(isGoodAngle);
 
         %%%%%%%%%%%%Input Measurements and commands %%%%%%%%%%%%

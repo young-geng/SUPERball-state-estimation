@@ -379,10 +379,10 @@ classdef TensegrityStructure < handle
             P12=X2*diag(Wc)*Z2';                        %Transformed cross covariance matrix
             K=P12/P2;                                   %kalman gain
             x=x1+K*(z-z1);                              %state update
-            fprintf('%7.2f', z(1:nAngle))
-            fprintf('\r\n')
-            fprintf('%7.2f', (z1(1:nAngle)))
-            fprintf('\r\n')
+             fprintf('%7.2f', z(1:nAngle))
+             fprintf('\r\n')
+%             fprintf('%7.2f', (z1(1:nAngle)))
+%             fprintf('\r\n')
             obj.P = P1 -K*P12';                         %covariance update
             obj.ySimUKF = reshape(x,[],3);
             

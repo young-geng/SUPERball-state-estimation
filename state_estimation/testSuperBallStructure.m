@@ -57,8 +57,8 @@ nodes(:,1) = nodes(:,1) - 0.95 ;
 
 bars = [1:2:11;
     2:2:12];
-strings = [2 5 9  8 12 4  1 11 10 3 7 6 1 1 11 11 10 10 3 3 7  7 6 6;
-           5 9 8 12  4 2 11 10  1 7 6 3 9 5  2  4 12  8 5 2 4 12 8 9];
+strings = [1  2 3 4 5 6 7 8  9 11 12  10 1 1 11 11 10 10 3 3 7  7 6 6;
+           11 5 7 2 9 3 6 12 8 10 4   1 9 5  2  4  12  8 5 2 4 12 8 9];
 
 stringRestLength = [(1-(preTension/Ka))*ones(12,1)*norm(nodes(2,:)-nodes(5,:)); %active
                                                               0.865*ones(12,1)]; %passive
@@ -149,7 +149,6 @@ ylabel('Y')
 zlabel('Z')
 ax1  = ax2;
 superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines);
-
 rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 
