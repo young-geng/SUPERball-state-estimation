@@ -295,7 +295,7 @@ classdef TensegrityStructure < handle
             end
             if(isempty(obj.ySimUKF))
                 obj.ySimUKF = [obj.nodePoints; zeros(size(obj.nodePoints))];
-                obj.P = 0.8*eye((nUKF-1)/2);
+                obj.P = eye((nUKF-1)/2);
                 lastContact = repmat(obj.nodePoints(:,1:2),1,nUKF);
             else
                 y = obj.ySimUKF;
@@ -319,14 +319,16 @@ classdef TensegrityStructure < handle
             rk=sqrt(c);
             
             %Compute the UKF sigmas
-            X=sigmas(x,obj.P,rk);
+            A = c * obj.P';
+            Y = x(:,ones(1,size(A,1)));
+            X = [x Y+A Y-A];
             X = reshape(X,obj.n*2,[]);
             xx = reshape(x,obj.n*2,[]); %precursor to keep fixed nodes in place
             X(fN,:) = repmat(xx(fN,:),1,nUKF); %Used to keep fixed nodes in place
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
             nAngle = sum(obj.goodAngles);
-            Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.01^2*eye(nAngle),0.04^2*eye(m-nAngle)); %measurement noise covariance matrix
+            Q_noise = blkdiag(0.4*eye(L/2),0.4*eye(L/2)); %process noise covariance matrix
+            R_noise = blkdiag(0.01*eye(nAngle),0.04*eye(m-nAngle)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;
@@ -359,7 +361,12 @@ classdef TensegrityStructure < handle
             X1 = reshape(X1,obj.n*6,[]);
             x1 = X1*Ws';    %Weighted average of forward propagated particles
             X2 = X1 - x1(:,ones(1,nUKF)); %Particles with average subtracted
-            P1 = X2*diag(Wc)*X2'+Q_noise; %State covariance?
+                        
+            [~,Skminus] = qr([(sqrt(Wc(2))*X2(:,2:end)), Q_noise]',0);
+            mmm = min(size(Skminus));
+            Skminus = Skminus(1:mmm,1:mmm);
+            xs = (abs(Wc(1)))^0.5*X2(:,1);
+            [Skminus,~] = cholupdate(Skminus,xs,'-');
             
             %%%%%%%%%%%%% Unscented Transformation of Measurements %%%%%%%%
             barVec = -memberNodeXYZ((obj.ss+1):(obj.bb+obj.ss),:);
@@ -375,15 +382,25 @@ classdef TensegrityStructure < handle
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]);
             z1 = Z1*Ws';                                %Weighted average of forward propagated measurements
             Z2 = Z1 - z1(:,ones(1,nUKF));               %Measuremnets with average subtracted
-            P2 = Z2*diag(Wc)*Z2'+R_noise;               %Measurement covariance
+            
+            [~,Syk] = qr([(sqrt(Wc(2))*Z2(:,2:end)), R_noise]',0);
+            mmm = min(size(Syk));
+            Syk = Syk(1:mmm,1:mmm);
+            xs = (abs(Wc(1)))^0.5*Z2(:,1);
+            [Syk,~] = cholupdate(Syk,xs,'-');
+            fprintf('%7.2f', z(1:nAngle))
+            fprintf('\r\n')
+            
+            
             P12=X2*diag(Wc)*Z2';                        %Transformed cross covariance matrix
-            K=P12/P2;                                   %kalman gain
-            x=x1+K*(z-z1);                              %state update
-             fprintf('%7.2f', z(1:nAngle))
-             fprintf('\r\n')
-%             fprintf('%7.2f', (z1(1:nAngle)))
-%             fprintf('\r\n')
-            obj.P = P1 -K*P12';                         %covariance update
+            U = P12/(Syk);
+            K = U/(Syk');
+            x=x1 + K*(z-z1);
+            mmm = size(U,2);
+            for i = 1:mmm
+                Skminus = cholupdate(Skminus,U(:,i),'-');
+            end
+            obj.P = Skminus;                          %covariance update
             obj.ySimUKF = reshape(x,[],3);
             
             function nodeXYZdoubleDot = getAccels(nodeXYZs,nodeXYZdots)
