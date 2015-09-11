@@ -326,7 +326,7 @@ classdef TensegrityStructure < handle
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
             nAngle = sum(obj.goodAngles);
             Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.01^2*eye(nAngle),0.001*eye(m-nAngle)); %measurement noise covariance matrix
+            R_noise = blkdiag(0.01^2*eye(nAngle),0.04^2*eye(m-nAngle)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;
@@ -366,10 +366,17 @@ classdef TensegrityStructure < handle
             barNorm = sqrt(barVec(:,ind1).^2 + barVec(:,ind2).^2 + barVec(:,ind3).^2);
             barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
             
+%             xyzNodesOld = xyzNodes;
+            for i=1:3:length(xyzNodes)
+                xyzNodesAvg = repmat(mean(xyzNodes(:,i:i+2)), 12, 1);
+                xyzNodes(:,i:i+2) = (xyzNodes(:,i:i+2) - xyzNodesAvg)*(1.4/1.7) + xyzNodesAvg;
+            end
+%             (xyzNodesOld - xyzNodes)
+            
             yyPlusBase = [xyzNodes; repmat(obj.baseStationPoints,1,nUKF)];
             allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
             lengthMeasures = sqrt(allVectors(:,ind1) + allVectors(:,ind2) + allVectors(:,ind3));
-            
+                    
             Z1 = [barAngleFromVert(obj.goodAngles,:);
                 lengthMeasures];
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]);

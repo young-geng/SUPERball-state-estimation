@@ -53,8 +53,8 @@ HH  = makehgtform('axisrotate',[0 1 0],0.6);
 HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
 nodes = (HH(1:3,1:3)*nodes')';
 nodes(:,3) = nodes(:,3) - min(nodes(:,3));
-nodes(:,2) = nodes(:,2) - 0.95 ;
-nodes(:,1) = nodes(:,1) - 0.95 ;
+nodes(:,2) = nodes(:,2) + 0.95 ;
+nodes(:,1) = nodes(:,1) + 0.95 ;
 
 bars = [1:2:11;
     2:2:12];
@@ -62,7 +62,7 @@ strings = [1  2 3 4 5 6 7 8  9 11 12  10 1 1 11 11 10 10 3 3 7  7 6 6;
            11 5 7 2 9 3 6 12 8 10 4   1 9 5  2  4  12  8 5 2 4 12 8 9];
 
 stringRestLength = [(1-(preTension/Ka))*ones(12,1)*norm(nodes(2,:)-nodes(5,:)); %active
-                                                              0.865*ones(12,1)]; %passive
+                                                              (1-(preTension/Kp))*ones(12,1)*norm(nodes(1,:)-nodes(9,:))]; %passive
 
 lengthMeasureIndices = [
     2*ones(1,1), 3*ones(1,2), 4*ones(1,3), 5*ones(1,4), 6*ones(1,5), ...
