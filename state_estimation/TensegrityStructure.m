@@ -295,7 +295,7 @@ classdef TensegrityStructure < handle
             end
             if(isempty(obj.ySimUKF))
                 obj.ySimUKF = [obj.nodePoints; zeros(size(obj.nodePoints))];
-                obj.P = 0.8*eye((nUKF-1)/2);
+                obj.P = 0.7*eye((nUKF-1)/2);
                 lastContact = repmat(obj.nodePoints(:,1:2),1,nUKF);
             else
                 y = obj.ySimUKF;
@@ -326,7 +326,7 @@ classdef TensegrityStructure < handle
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
             nAngle = sum(obj.goodAngles);
             Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.01^2*eye(nAngle),0.04^2*eye(m-nAngle)); %measurement noise covariance matrix
+            R_noise = blkdiag(0.01^2*eye(nAngle),0.001*eye(m-nAngle)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;

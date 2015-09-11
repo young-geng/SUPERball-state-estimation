@@ -3,7 +3,8 @@ function superBallUpdate(superBall1,superBallUKFPlot1,tspan1,ax1,text1,barlength
 %   Detailed explanation goes here
 
 %create some persistent variables for objects and structs
-persistent superBall superBallUKFPlot tspan allMeasureIndices ax i texth barlength lines dtSinceLastGoodLength lastUpdatedRangingMeasures
+persistent superBall superBallUKFPlot tspan allMeasureIndices ax i texth barlength lines dtSinceLastGoodLength lastUpdatedRangingMeasures timestep
+global state;
 if nargin>1
     i = 0;
     superBall = superBall1;
@@ -21,6 +22,8 @@ if nargin>1
     dtSinceLastGoodLength = ones(size(allMeasureIndices,2),1);
     lastUpdatedRangingMeasures = dtSinceLastGoodLength;
     
+    state = superBall.ySimUKF(:);
+    
 else if nargin == 1
         
         i = i+1;
@@ -35,7 +38,6 @@ else if nargin == 1
         indexRest = indexRest(newRestLength);
         goodRestLengths = restLengths(indexRest);
         superBall.simStructUKF.stringRestLengths(indexRest,:) = goodRestLengths(:,ones(1,145)) ;
-        %disp(superBall.simStructUKF.stringRestLengths);
         %%%%%%%%%%%%%Process message data %%%%%%%%%%%%%%%%%%%%%
         % Most of the processing is done before it reaches MATLAB
 
@@ -44,7 +46,7 @@ else if nargin == 1
         isBar = [1, 22, 39, 52, 61, 66];
         isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
         rangingMeasures(isInternal) = 0;
-        rangingMeasures(isBar) = barlength + 3.9;       
+        rangingMeasures(isBar) = barlength;       
         rangingMeasures(isnan(rangingMeasures)) = 0;
         isNewMeasurement = rangingMeasures > 0;
         updateVel(isNewMeasurement) = (rangingMeasures(isNewMeasurement) - lastUpdatedRangingMeasures(isNewMeasurement))./(dtSinceLastGoodLength(isNewMeasurement)*tspan);
@@ -60,9 +62,10 @@ else if nargin == 1
 
         %%%%%%%%%%%%Input Measurements and commands %%%%%%%%%%%%
         %superBall.simStructUKF.stringRestLengths; %TODO: Need to implement this
+        baseOffsets = [3.8*ones(length(isInternal),1); repmat([3.59; 3.74; 4.19; 4.13],12,1)];
         
         superBall.lengthMeasureIndices = allMeasureIndices(:,isUpdatedMeasurement);
-        goodLengths = rangingMeasures(isUpdatedMeasurement) - 3.9;
+        goodLengths = rangingMeasures(isUpdatedMeasurement) - baseOffsets(isUpdatedMeasurement);
         superBall.measurementUKFInput = [angleMeasures; goodLengths]; %UKF measures
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
@@ -74,11 +77,7 @@ else if nargin == 1
             texth(j).Position = nodes(j,:) + [0 0 0.1];
         end
         
-        baseStationPoints = [
-            -3.3800    0         0.3500;
-            -2.3800   -0.9800    2.4300;
-             0         0         0.3500;
-            -0.7039   -2.1896    0.3500];
+        baseStationPoints = superBall.baseStationPoints;
         lengthMeasures = [
     nodes(1,:);     baseStationPoints(1,:);    nodes(2,:);     baseStationPoints(1,:);
     nodes(3,:);     baseStationPoints(1,:);    nodes(4,:);     baseStationPoints(1,:);
@@ -113,7 +112,7 @@ else if nargin == 1
         for j = 1: 48
             texth(j+16).Position = (lengthMeasures(2*j-1,:) + lengthMeasures(2*j,:)*3)/4;
             if(isUpdatedMeasurement(measureLines(j)))
-            texth(j+16).String = num2str(rangingMeasures(measureLines(j))-3.9,2);
+            texth(j+16).String = num2str(rangingMeasures(measureLines(j))-baseOffsets(measureLines(j)),2);
             else
                 lengthMeasures(2*j-1,:) = lengthMeasures(2*j,:);
                 texth(j+16).String = ' ';
@@ -124,6 +123,7 @@ else if nargin == 1
         lines(j).XData = lengthMeasures(24*j+(-23:0),1); lines(j).YData = lengthMeasures(24*j+(-23:0),2); lines(j).ZData = lengthMeasures(24*j+(-23:0),3);
         end
         
+        state = [state superBall.ySimUKF(:)];
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         x_Avg = mean( superBallUKFPlot.nodePoints(:,1));
         y_Avg = mean( superBallUKFPlot.nodePoints(:,2));

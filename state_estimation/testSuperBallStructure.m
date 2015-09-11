@@ -3,17 +3,17 @@ clc
 clear all
 close all
 
-barLength = 1.625;
+barLength = 1.7;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
 lims = 2*barLength;
 gravity = 9.81;             % m/s^2
-tspan =0.1;                % time between plot updates in seconds
+tspan =1/10;                % time between plot updates in seconds
 delT = 0.001;               % timestep for dynamic sim in seconds
 delTUKF  = 0.005;
 Kp = 998;                   %passive string stiffness in Newtons/meter
 Ka = 3150;                  %active string stiffness in Newtons/meter
-preTension = 100*(barLength/1.7);                   % how much force to apply to each cable in Newtons
+preTension = 100;                   % how much force to apply to each cable in Newtons
 nodalMass = (totalSUPERballMass/12)*ones(12,1);
 Cp = 30;                    % damping constant, too lazy to figure out units.
 Ca = 50;                    % constant for passive and active springs
@@ -22,14 +22,15 @@ F = zeros(12,3);
 stringStiffness = [Ka*ones(12,1); Kp*ones(12,1)];   % First set of 12 are acuated springs, second are passive
 barStiffness = 100000*ones(6,1);
 stringDamping = [Ca*ones(12,1); Cp*ones(12,1)];     % string damping vector
+global state;
 
 options = optimoptions('quadprog','Algorithm',  'interior-point-convex','Display','off');
 
 baseStationPoints = [
-    -3.3800         0    0.3500;
-    -2.3800   -0.9800    2.4300;
+     5.3500    1.2500    0.3500;
+     2.7200    0.6200    2.6600;
      0              0    0.3500;
-    -0.7039   -2.1896    0.3500];
+    -0.9600    2.3500    0.3500];
 labels = {'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'};
 
 
