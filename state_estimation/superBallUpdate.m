@@ -30,7 +30,7 @@ if nargin>1
     load('offsets.mat');
     offsets = reshape(offsets',48,1);
     state = superBall.ySimUKF(:);
-    
+
 else if nargin == 1
         
         i = i+1;
@@ -142,11 +142,15 @@ else if nargin == 1
         ylim(ax(1),[-lims lims]+y_Avg);
         
         %%%%%%%%%%%% Try and make a movie %%%%%%%%%%%%%%%%%%%%%%
-        F = fig2frame(hfig,framepar); % <-- Use this
-        % F = getframe(hfig); % <-- Not this.
-
-        % Add the frame to the video object
-        writeVideo(hvid,F);
+        % Desired frame resolution (see fig2frame). The video will automatically adopt the resolution of the first frame (see HELP VIDEOWRITER).
+        % You could instead set the Width property of the video object, but I prefer this.
+%         framepar.resolution = [1024,768];
+% 
+%         F = fig2frame(f,framepar); % <-- Use this
+%         % F = getframe(hfig); % <-- Not this.
+% 
+%         % Add the frame to the video object
+%         writeVideo(hvid,F);
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
     else

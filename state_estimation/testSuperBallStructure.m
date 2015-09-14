@@ -28,9 +28,6 @@ global goodRestlengths_all;
 global hvid;
 global f;
 
-movieFrames = VideoWriter('test.avi');
-options = optimoptions('quadprog','Algorithm',  'interior-point-convex','Display','off');
-
 baseStationPoints = [
      5.3500    1.2500    0.3500;
      2.4200    1.0000    2.6600;
@@ -183,27 +180,22 @@ ax1  = ax2;
 %%%%%%%%%%%%%%%% Make Video %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Create a new VideoWriter object (an empty video file). Use whatever format you want,
 % but in my experience MP4 (with H.264 codec) is by far the best. Please stop using AVI.
-hvid = VideoWriter('./movie.mp4','MPEG-4');
-
-% Full quality, because why not?
-set(hvid,'Quality',100);
-
-% Set the frame rate
-set(hvid,'FrameRate',30);
-
-% Open the object for writing
-open(hvid);
-
-% Desired frame resolution (see fig2frame). The video will automatically adopt the resolution of the first frame (see HELP VIDEOWRITER).
-% You could instead set the Width property of the video object, but I prefer this.
-framepar.resolution = [1024,768];
+% hvid = VideoWriter('movie.mp4','Archival');
+% 
+% % Full quality, because why not?
+% %set(hvid,'Quality',100);
+% 
+% % Set the frame rate
+% set(hvid,'FrameRate',30);
+% 
+% % Open the object for writing
+% open(hvid);
 
 % Create a new figure
 % f is already a figure obj
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines);
-open(movieFrames);
 rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 
