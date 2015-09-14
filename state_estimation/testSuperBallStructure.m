@@ -23,12 +23,17 @@ stringStiffness = [Ka*ones(12,1); Kp*ones(12,1)];   % First set of 12 are acuate
 barStiffness = 100000*ones(6,1);
 stringDamping = [Ca*ones(12,1); Cp*ones(12,1)];     % string damping vector
 global state;
+global updateVel_all;
+global goodRestlengths_all;
+global hvid;
+global f;
 
+movieFrames = VideoWriter('test.avi');
 options = optimoptions('quadprog','Algorithm',  'interior-point-convex','Display','off');
 
 baseStationPoints = [
      5.3500    1.2500    0.3500;
-     2.7200    0.6200    2.6600;
+     2.4200    1.0000    2.6600;
      0              0    0.3500;
     -0.9600    2.3500    0.3500];
 labels = {'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'};
@@ -49,8 +54,8 @@ nodes = [
    -barLength*0.5  -barSpacing       0;
     ];
 
-HH  = makehgtform('axisrotate',[0 1 0],0.6);
-HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
+HH  = makehgtform('axisrotate',[0 1 0],-0.6);
+HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
 nodes = (HH(1:3,1:3)*nodes')';
 nodes(:,3) = nodes(:,3) - min(nodes(:,3));
 nodes(:,2) = nodes(:,2) + 0.95 ;
@@ -90,7 +95,32 @@ colormap([0.8 0.8 1; 0 1 1])
 generatePlot(superBallDynamicsPlot,ax2);
 updatePlot(superBallDynamicsPlot);
 scatter3(baseStationPoints(:,1),baseStationPoints(:,2),baseStationPoints(:,3),'fill','m');
-hh = text([nodes(:,1);baseStationPoints(:,1)],[nodes(:,2);baseStationPoints(:,2)],[nodes(:,3);baseStationPoints(:,3)]+0.1,labels,'FontSize',10);
+
+groundTruthLines_test3 = [
+    % Init Position
+    [1.09   1.60    0]; % 9
+    [1.80	0.92	0]; % 6
+    [2.09	1.86	0]; % 8
+    % Flop 1
+    [2.16	1.96	0]; % 8'
+    [3.29	1.90	0]; % 10
+    [2.71	1.07	0]; % 12
+    % Flop 2
+    [2.77	1.14	0]; % 12'
+    [3.58   0.43    0]; % 7
+    [3.80   1.40    0]; % 4
+%     % Flop 3
+%     [3.90   1.46    0]; % 4'
+%     [4.93   1.20    0]; % 11
+%     [4.34   0.44    0]; % 2
+    
+];
+groundTruthLables_test3 = {'9' '6' '8' '' '10' '12' '' '7' '4'};% '4' '11' '2'};
+
+scatter3(groundTruthLines_test3(:,1),groundTruthLines_test3(:,2),groundTruthLines_test3(:,3),'fill','o');
+
+labels = [labels groundTruthLables_test3];
+hh = text([nodes(:,1);baseStationPoints(:,1);groundTruthLines_test3(:,1)],[nodes(:,2);baseStationPoints(:,2);groundTruthLines_test3(:,2)],[nodes(:,3);baseStationPoints(:,3);groundTruthLines_test3(:,3)]+0.1,labels,'FontSize',10);
 
 lengthMeasures = [
     nodes(1,:);     baseStationPoints(1,:);    nodes(2,:);     baseStationPoints(1,:);
@@ -131,8 +161,8 @@ for i =1:4
 lines(i) = plot3(lengthMeasures(24*i+(-23:0),1),lengthMeasures(24*i+(-23:0),2),lengthMeasures(24*i+(-23:0),3));
 end
 text1 = cellstr(num2str(zeros(48,1),2));
-hh2 = text(textPositions(:,1),textPositions(:,2),textPositions(:,3),text1,'FontSize',8);
-hh = [hh;hh2];
+% hh2 = text(textPositions(:,1),textPositions(:,2),textPositions(:,3),text1,'FontSize',8);
+% hh = [hh;hh2];
 
 
 %settings to make it pretty
@@ -140,7 +170,7 @@ axis equal
 view(3)
 grid on
 light('Position',[0 0 10]);%,'Style','local')
-lighting flat
+% lighting flat
 xlim([-lims lims])
 ylim([-lims lims])
 zlim(0.8*[-0.01 lims])
@@ -149,10 +179,33 @@ xlabel('X')
 ylabel('Y')
 zlabel('Z')
 ax1  = ax2;
+
+%%%%%%%%%%%%%%%% Make Video %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Create a new VideoWriter object (an empty video file). Use whatever format you want,
+% but in my experience MP4 (with H.264 codec) is by far the best. Please stop using AVI.
+hvid = VideoWriter('./movie.mp4','MPEG-4');
+
+% Full quality, because why not?
+set(hvid,'Quality',100);
+
+% Set the frame rate
+set(hvid,'FrameRate',30);
+
+% Open the object for writing
+open(hvid);
+
+% Desired frame resolution (see fig2frame). The video will automatically adopt the resolution of the first frame (see HELP VIDEOWRITER).
+% You could instead set the Width property of the video object, but I prefer this.
+framepar.resolution = [1024,768];
+
+% Create a new figure
+% f is already a figure obj
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines);
+open(movieFrames);
 rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
-
 
 
 

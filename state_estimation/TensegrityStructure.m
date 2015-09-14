@@ -311,7 +311,7 @@ classdef TensegrityStructure < handle
             beta = 2;
             ki = 0;
             lambda=alpha^2*(L+ki)-L;
-            c=L+lambda;
+            c=(L+lambda);
             Ws=[lambda/c , (0.5/c)*ones(1,2*L)];
             Ws = ones(size(Ws))/length(Ws);
             fN = sim.fN;
@@ -326,7 +326,7 @@ classdef TensegrityStructure < handle
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
             nAngle = sum(obj.goodAngles);
             Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.01^2*eye(nAngle),0.04^2*eye(m-nAngle)); %measurement noise covariance matrix
+            R_noise = blkdiag(1^2*eye(nAngle),0.029^2*eye(m-nAngle)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;
@@ -386,8 +386,8 @@ classdef TensegrityStructure < handle
             P12=X2*diag(Wc)*Z2';                        %Transformed cross covariance matrix
             K=P12/P2;                                   %kalman gain
             x=x1+K*(z-z1);                              %state update
-             fprintf('%7.2f', z(1:nAngle))
-             fprintf('\r\n')
+%              fprintf('%7.2f', z(1:nAngle));
+%              fprintf('\r\n');
 %             fprintf('%7.2f', (z1(1:nAngle)))
 %             fprintf('\r\n')
             obj.P = P1 -K*P12';                         %covariance update

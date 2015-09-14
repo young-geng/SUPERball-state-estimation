@@ -3,8 +3,13 @@ function superBallUpdate(superBall1,superBallUKFPlot1,tspan1,ax1,text1,barlength
 %   Detailed explanation goes here
 
 %create some persistent variables for objects and structs
-persistent superBall superBallUKFPlot tspan allMeasureIndices ax i texth barlength lines dtSinceLastGoodLength lastUpdatedRangingMeasures timestep
+persistent superBall superBallUKFPlot tspan allMeasureIndices ax i texth barlength lines dtSinceLastGoodLength lastUpdatedRangingMeasures offsets
 global state;
+global updateVel_all;
+global goodRestlengths_all;
+global hvid;
+global f;
+
 if nargin>1
     i = 0;
     superBall = superBall1;
@@ -22,6 +27,8 @@ if nargin>1
     dtSinceLastGoodLength = ones(size(allMeasureIndices,2),1);
     lastUpdatedRangingMeasures = dtSinceLastGoodLength;
     
+    load('offsets.mat');
+    offsets = reshape(offsets',48,1);
     state = superBall.ySimUKF(:);
     
 else if nargin == 1
@@ -32,11 +39,12 @@ else if nargin == 1
         motorPos = msgData(end - (numMotorPos-1) : end);
         restLengths = 1                - abs((0.009      *  1000/109)*motorPos);
         %             0 radian length  drive Shaft Radius   dumb ros scaling 
-
+        
         newRestLength = ~isnan(restLengths);
         indexRest = 1:numMotorPos; 
         indexRest = indexRest(newRestLength);
         goodRestLengths = restLengths(indexRest);
+        goodRestlengths_all = [goodRestlengths_all restLengths];
         superBall.simStructUKF.stringRestLengths(indexRest,:) = goodRestLengths(:,ones(1,145)) ;
         %%%%%%%%%%%%%Process message data %%%%%%%%%%%%%%%%%%%%%
         % Most of the processing is done before it reaches MATLAB
@@ -50,7 +58,7 @@ else if nargin == 1
         rangingMeasures(isnan(rangingMeasures)) = 0;
         isNewMeasurement = rangingMeasures > 0;
         updateVel(isNewMeasurement) = (rangingMeasures(isNewMeasurement) - lastUpdatedRangingMeasures(isNewMeasurement))./(dtSinceLastGoodLength(isNewMeasurement)*tspan);
-        isUpdatedMeasurement = isNewMeasurement & abs(updateVel) < 1;
+        isUpdatedMeasurement = isNewMeasurement & abs(updateVel) < 0.5;
         dtSinceLastGoodLength = dtSinceLastGoodLength + 1;
         dtSinceLastGoodLength(isUpdatedMeasurement) = 1; 
         lastUpdatedRangingMeasures(isUpdatedMeasurement) = rangingMeasures(isUpdatedMeasurement);
@@ -62,10 +70,12 @@ else if nargin == 1
 
         %%%%%%%%%%%%Input Measurements and commands %%%%%%%%%%%%
         %superBall.simStructUKF.stringRestLengths; %TODO: Need to implement this
-        baseOffsets = [3.8*ones(length(isInternal),1); repmat([3.59; 3.74; 4.19; 4.13],12,1)];
+        baseOffsets = [3.8*ones(length(isInternal),1); offsets];
         
         superBall.lengthMeasureIndices = allMeasureIndices(:,isUpdatedMeasurement);
         goodLengths = rangingMeasures(isUpdatedMeasurement) - baseOffsets(isUpdatedMeasurement);
+        rangingMeasures(~isUpdatedMeasurement) = nan;
+        updateVel_all = [updateVel_all rangingMeasures];
         superBall.measurementUKFInput = [angleMeasures; goodLengths]; %UKF measures
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
@@ -110,12 +120,12 @@ else if nargin == 1
         measureLines = [67:4:114, 68:4:114, 69:4:114, 70:4:114] ;
 
         for j = 1: 48
-            texth(j+16).Position = (lengthMeasures(2*j-1,:) + lengthMeasures(2*j,:)*3)/4;
+%             texth(j+16+9).Position = (lengthMeasures(2*j-1,:) + lengthMeasures(2*j,:)*3)/4;
             if(isUpdatedMeasurement(measureLines(j)))
-            texth(j+16).String = num2str(rangingMeasures(measureLines(j))-baseOffsets(measureLines(j)),2);
+%             texth(j+16+9).String = num2str(rangingMeasures(measureLines(j))-baseOffsets(measureLines(j)),2);
             else
                 lengthMeasures(2*j-1,:) = lengthMeasures(2*j,:);
-                texth(j+16).String = ' ';
+%                 texth(j+16+9).String = ' ';
             end
         end
         
@@ -128,8 +138,16 @@ else if nargin == 1
         x_Avg = mean( superBallUKFPlot.nodePoints(:,1));
         y_Avg = mean( superBallUKFPlot.nodePoints(:,2));
         lims = 2*barlength;
-        xlim(ax(1),[-lims lims]+x_Avg)
-        ylim(ax(1),[-lims lims]+y_Avg)
+        xlim(ax(1),[-lims lims]+x_Avg);
+        ylim(ax(1),[-lims lims]+y_Avg);
+        
+        %%%%%%%%%%%% Try and make a movie %%%%%%%%%%%%%%%%%%%%%%
+        F = fig2frame(hfig,framepar); % <-- Use this
+        % F = getframe(hfig); % <-- Not this.
+
+        % Add the frame to the video object
+        writeVideo(hvid,F);
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
     else
         for j = 1
