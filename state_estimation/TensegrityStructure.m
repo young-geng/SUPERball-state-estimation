@@ -18,6 +18,8 @@ classdef TensegrityStructure < handle
         F                     %n by 3 matrix nodal forces
         quadProgOptions       %options for quad prog
         
+        stringInitRestLengths % 2 by 1 matrix with active and passive starting rest lengths
+        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%Added for dynamics %%%%%%%%%%%%%%%%%%
         simStruct %a structure containing most variables needed for simulation functions
         %this improves efficiency because we don't need to pass

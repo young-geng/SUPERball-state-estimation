@@ -1,9 +1,9 @@
-function superBallUpdate(superBall1,superBallUKFPlot1,tspan1,ax1,text1,barlength1,lines1)
+function superBallUpdate(superBall1,superBallUKFPlot1,tspan1,ax1,text1,barlength1,lines1,restLengths1)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
 %create some persistent variables for objects and structs
-persistent superBall superBallUKFPlot tspan allMeasureIndices ax i texth barlength lines dtSinceLastGoodLength lastUpdatedRangingMeasures offsets
+persistent superBall superBallUKFPlot tspan allMeasureIndices ax i texth barlength lines dtSinceLastGoodLength lastUpdatedRangingMeasures offsets lastUpdatedStringLengths
 global state;
 global updateVel_all;
 global goodRestlengths_all;
@@ -27,6 +27,8 @@ if nargin>1
     dtSinceLastGoodLength = ones(size(allMeasureIndices,2),1);
     lastUpdatedRangingMeasures = dtSinceLastGoodLength;
     
+    lastUpdatedStringLengths = restLengths1;
+    
     load('offsets.mat');
     offsets = reshape(offsets',48,1);
     state = superBall.ySimUKF(:);
@@ -37,18 +39,35 @@ else if nargin == 1
         numMotorPos = 12;
         msgData = superBall1;
         motorPos = msgData(end - (numMotorPos-1) : end);
-        restLengths = 1                - abs((0.009      *  1000/109)*motorPos);
-        %             0 radian length  drive Shaft Radius   dumb ros scaling 
+        restLengths = superBall.stringInitRestLengths(1) -               abs(((0.009) *            (1000/109))*motorPos); % 1 - 2*r*pi
+        %             0 radian length   drive Shaft Radius          dumb ros scaling 
         
-        newRestLength = ~isnan(restLengths);
+        restLengths(isnan(restLengths)) = lastUpdatedStringLengths(isnan(restLengths));
+        %newRestLength = ~isnan(restLengths);
         indexRest = 1:numMotorPos; 
-        indexRest = indexRest(newRestLength);
+        %indexRest = indexRest(newRestLength);
         goodRestLengths = restLengths(indexRest);
-        goodRestlengths_all = [goodRestlengths_all restLengths];
+        goodRestlengths_all = [goodRestlengths_all motorPos];
+        lastUpdatedStringLengths = restLengths;
         superBall.simStructUKF.stringRestLengths(indexRest,:) = goodRestLengths(:,ones(1,145)) ;
         %%%%%%%%%%%%%Process message data %%%%%%%%%%%%%%%%%%%%%
         % Most of the processing is done before it reaches MATLAB
 
+%         if i>3
+%             rangingMeasures = msgData(1:end-(6+numMotorPos));
+%             updateVel = zeros(size(rangingMeasures));
+%             isBar = [1, 22, 39, 52, 61, 66];
+%             isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
+%             rangingMeasures(isInternal) = 0;
+%             rangingMeasures(isBar) = barlength;       
+%             rangingMeasures(isnan(rangingMeasures)) = 0;
+%             isNewMeasurement = rangingMeasures > 0;
+%             updateVel(isNewMeasurement) = (rangingMeasures(isNewMeasurement) - lastUpdatedRangingMeasures(isNewMeasurement))./(dtSinceLastGoodLength(isNewMeasurement)*tspan);
+%             isUpdatedMeasurement = isNewMeasurement & abs(updateVel) < 2;
+%             dtSinceLastGoodLength = dtSinceLastGoodLength + 1;
+%             dtSinceLastGoodLength(isUpdatedMeasurement) = 1; 
+%             lastUpdatedRangingMeasures(isUpdatedMeasurement) = rangingMeasures(isUpdatedMeasurement);
+%         else
         rangingMeasures = msgData(1:end-(6+numMotorPos));
         updateVel = zeros(size(rangingMeasures));
         isBar = [1, 22, 39, 52, 61, 66];
@@ -62,6 +81,7 @@ else if nargin == 1
         dtSinceLastGoodLength = dtSinceLastGoodLength + 1;
         dtSinceLastGoodLength(isUpdatedMeasurement) = 1; 
         lastUpdatedRangingMeasures(isUpdatedMeasurement) = rangingMeasures(isUpdatedMeasurement);
+%         end
                      
         allAngleMeasures = msgData((end-(5+numMotorPos)): (end-numMotorPos));
         isGoodAngle = ~isnan(allAngleMeasures);

@@ -3,7 +3,7 @@ clc
 clear all
 close all
 
-barLength = 1.7;
+barLength = 1.4;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
 lims = 2*barLength;
@@ -51,12 +51,22 @@ nodes = [
    -barLength*0.5  -barSpacing       0;
     ];
 
-HH  = makehgtform('axisrotate',[0 1 0],-0.6);
+%%%%%% This rotate the robot to face 3-6-7 %%%%%%%%%%%
+%%%%%% Used in the local/external video tests %%%%%%%%
+HH  = makehgtform('axisrotate',[0 1 0],3.14);
+HH  = makehgtform('axisrotate',[0 1 0],0.7)*HH;
 HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
+HH  = makehgtform('axisrotate',[0 0 1],-1.6)*HH;
+
+%%%%%% This rotate the robot to face 6-8-9 %%%%%%%%%%%
+%%%%%% Used in the flop tests %%%%%%%%%%%%%%%%%%%%%%%%
+% HH  = makehgtform('axisrotate',[0 1 0],-0.6);
+% HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
+
 nodes = (HH(1:3,1:3)*nodes')';
 nodes(:,3) = nodes(:,3) - min(nodes(:,3));
-nodes(:,2) = nodes(:,2) + 0.95 ;
-nodes(:,1) = nodes(:,1) + 0.95 ;
+nodes(:,2) = nodes(:,2) + 1.7 ;
+nodes(:,1) = nodes(:,1) + 1.7;
 
 bars = [1:2:11;
     2:2:12];
@@ -80,6 +90,8 @@ superBallDynamicsPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
 superBall = TensegrityStructure(nodes, strings, bars, F, stringStiffness,...
     barStiffness, stringDamping,barDamping, nodalMass, delT,delTUKF,stringRestLength,gravity);
 superBall.baseStationPoints = baseStationPoints;
+superBall.stringInitRestLengths = [stringRestLength(1,1); stringRestLength(13,1)];
+
 f = figure('units','normalized','outerposition',[0 0 1 1]);
 
 %%%%%% Dynamics Plot %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -195,7 +207,7 @@ ax1  = ax2;
 % f is already a figure obj
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines);
+superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength);
 rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 
