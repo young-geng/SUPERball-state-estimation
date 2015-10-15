@@ -15,8 +15,8 @@ Kp = 998;                   %passive string stiffness in Newtons/meter
 Ka = 3150;                  %active string stiffness in Newtons/meter
 preTension = 100;                   % how much force to apply to each cable in Newtons
 nodalMass = (totalSUPERballMass/12)*ones(12,1);
-Cp = 30;                    % damping constant, too lazy to figure out units.
-Ca = 50;                    % constant for passive and active springs
+Cp = 70;                    % damping constant, too lazy to figure out units.
+Ca = 70;                    % constant for passive and active springs
 barDamping = Cp/100*ones(6,1);
 F = zeros(12,3);
 stringStiffness = [Ka*ones(12,1); Kp*ones(12,1)];   % First set of 12 are acuated springs, second are passive
@@ -29,11 +29,15 @@ global hvid;
 global f;
 
 baseStationPoints = [
-     5.3500    1.2500    0.3500;
-     2.4200    1.0000    2.6600;
-     0              0    0.3500;
-    -0.9600    2.3500    0.3500];
-labels = {'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'};
+     5.3500    1.2500    0.3500; %13
+     2.4200    1.0000    2.6600; %14
+     0              0    0.3500; %15 (17)
+    -0.9600    2.3500    0.3500; %16
+     0.5000   -0.5000    0.3500; %17
+    -0.5000    0.5000    0.3500; %18
+    -0.5000   -0.5000    0.3500; %19
+     0.5000    0.5000    0.3500];%20
+labels = {'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'};
 
 
 nodes = [
@@ -62,7 +66,7 @@ nodes = [
 %%%%%% Used in the flop tests %%%%%%%%%%%%%%%%%%%%%%%%
 HH  = makehgtform('axisrotate',[0 1 0],-0.6);
 HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
-HH  = makehgtform('axisrotate',[0 0 1],1.7)*HH;
+% HH  = makehgtform('axisrotate',[0 0 1],1.7)*HH;
 
 nodes = (HH(1:3,1:3)*nodes')';
 nodes(:,3) = nodes(:,3) - min(nodes(:,3));
@@ -80,8 +84,9 @@ stringRestLength = [(1-(preTension/Ka))*ones(12,1)*norm(nodes(2,:)-nodes(5,:)); 
 lengthMeasureIndices = [
     2*ones(1,1), 3*ones(1,2), 4*ones(1,3), 5*ones(1,4), 6*ones(1,5), ...
     7*ones(1,6), 8*ones(1,7), 9*ones(1,8), 10*ones(1,9),11*ones(1,10),12*ones(1,11)...
-    13*ones(1,12), 14*ones(1,12), 15*ones(1,12), 16*ones(1,12);
-    1, 1:2, 1:3, 1:4, 1:5, 1:6, 1:7, 1:8,  1:9,1:10,1:11, 1:12, 1:12, 1:12, 1:12]';
+    13*ones(1,12), 14*ones(1,12), 15*ones(1,12), 16*ones(1,12), ...
+    18*ones(1,12), 19*ones(1,12), 20*ones(1,12), 21*ones(1,12);
+    1, 1:2, 1:3, 1:4, 1:5, 1:6, 1:7, 1:8,  1:9,1:10,1:11, 1:12, 1:12, 1:12, 1:12, 1:12, 1:12, 1:12, 1:12]';
 
 lengthMeasureIndices([1 6 15 28 45 66],:) = []; %eliminate bar measures
 superBallCommandPlot = TensegrityPlot(nodes, strings, bars, 0.025,0.005);
@@ -106,6 +111,7 @@ generatePlot(superBallDynamicsPlot,ax2);
 updatePlot(superBallDynamicsPlot);
 scatter3(baseStationPoints(:,1),baseStationPoints(:,2),baseStationPoints(:,3),'fill','m');
 
+%%%%%% Run for video %%%%%%%%%%%%%%%%%%%%
 groundTruthLines_test3 = [
     % Init Position
     [1.09   1.60    0]; % 9
@@ -116,13 +122,35 @@ groundTruthLines_test3 = [
     [3.29	1.90	0]; % 10
     [2.71	1.07	0]; % 12
     % Flop 2
-    [2.77	1.14	0]; % 12'
-    [3.58   0.43    0]; % 7
-    [3.80   1.40    0]; % 4
+    [(2.77-0.265)	(1.14-0.00)    0]; % 12'
+    [(3.58-0.465)   (0.43-0.15)    0]; % 7
+    [(3.80-0.265)   (1.40-0.22)    0]; % 4
 %     % Flop 3
 %     [3.90   1.46    0]; % 4'
 %     [4.93   1.20    0]; % 11
 %     [4.34   0.44    0]; % 2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%% Run for paper %%%%%%%%%%%%%%%%%%%%
+% groundTruthLines_test3 = [
+%     % Init Position
+%     [1.09   1.60    0]; % 9
+%     [1.80	0.92	0]; % 6
+%     [2.09	1.86	0]; % 8
+%     % Flop 1
+%     [2.16	1.96	0]; % 8'
+%     [3.29	1.90	0]; % 10
+%     [2.71	1.07	0]; % 12
+%     % Flop 2
+%     [2.77	1.14	0]; % 12'
+%     [3.58   0.43    0]; % 7
+%     [3.80   1.40    0]; % 4
+% %     % Flop 3
+% %     [3.90   1.46    0]; % 4'
+% %     [4.93   1.20    0]; % 11
+% %     [4.34   0.44    0]; % 2
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
 ];
 groundTruthLables_test3 = {'9' '6' '8' '' '10' '12' '' '7' '4'};% '4' '11' '2'};
@@ -160,6 +188,34 @@ lengthMeasures = [
     nodes(7,:);     baseStationPoints(4,:);    nodes(8,:);     baseStationPoints(4,:);
     nodes(9,:);     baseStationPoints(4,:);    nodes(10,:);    baseStationPoints(4,:);
     nodes(11,:);    baseStationPoints(4,:);    nodes(12,:);    baseStationPoints(4,:);
+    
+    nodes(1,:);     baseStationPoints(5,:);    nodes(2,:);     baseStationPoints(5,:);
+    nodes(3,:);     baseStationPoints(5,:);    nodes(4,:);     baseStationPoints(5,:);
+    nodes(5,:);     baseStationPoints(5,:);    nodes(6,:);     baseStationPoints(5,:);
+    nodes(7,:);     baseStationPoints(5,:);    nodes(8,:);     baseStationPoints(5,:);
+    nodes(9,:);     baseStationPoints(5,:);    nodes(10,:);    baseStationPoints(5,:);
+    nodes(11,:);    baseStationPoints(5,:);    nodes(12,:);    baseStationPoints(5,:);
+    
+    nodes(1,:);     baseStationPoints(6,:);    nodes(2,:);     baseStationPoints(6,:);
+    nodes(3,:);     baseStationPoints(6,:);    nodes(4,:);     baseStationPoints(6,:);
+    nodes(5,:);     baseStationPoints(6,:);    nodes(6,:);     baseStationPoints(6,:);
+    nodes(7,:);     baseStationPoints(6,:);    nodes(8,:);     baseStationPoints(6,:);
+    nodes(9,:);     baseStationPoints(6,:);    nodes(10,:);    baseStationPoints(6,:);
+    nodes(11,:);    baseStationPoints(6,:);    nodes(12,:);    baseStationPoints(6,:);
+    
+    nodes(1,:);     baseStationPoints(7,:);    nodes(2,:);     baseStationPoints(7,:);
+    nodes(3,:);     baseStationPoints(7,:);    nodes(4,:);     baseStationPoints(7,:);
+    nodes(5,:);     baseStationPoints(7,:);    nodes(6,:);     baseStationPoints(7,:);
+    nodes(7,:);     baseStationPoints(7,:);    nodes(8,:);     baseStationPoints(7,:);
+    nodes(9,:);     baseStationPoints(7,:);    nodes(10,:);    baseStationPoints(7,:);
+    nodes(11,:);    baseStationPoints(7,:);    nodes(12,:);    baseStationPoints(7,:);
+    
+    nodes(1,:);     baseStationPoints(8,:);    nodes(2,:);     baseStationPoints(8,:);
+    nodes(3,:);     baseStationPoints(8,:);    nodes(4,:);     baseStationPoints(8,:);
+    nodes(5,:);     baseStationPoints(8,:);    nodes(6,:);     baseStationPoints(8,:);
+    nodes(7,:);     baseStationPoints(8,:);    nodes(8,:);     baseStationPoints(8,:);
+    nodes(9,:);     baseStationPoints(8,:);    nodes(10,:);    baseStationPoints(8,:);
+    nodes(11,:);    baseStationPoints(8,:);    nodes(12,:);    baseStationPoints(8,:);
     ];
 
 textPositions = zeros(48,3);
@@ -167,7 +223,7 @@ textPositions = zeros(48,3);
 for i =1:48
     textPositions(i,:) = (lengthMeasures(2*i-1,:) + lengthMeasures(2*i,:)*3)/4;
 end
-for i =1:4
+for i =1:8
 lines(i) = plot3(lengthMeasures(24*i+(-23:0),1),lengthMeasures(24*i+(-23:0),2),lengthMeasures(24*i+(-23:0),3));
 end
 text1 = cellstr(num2str(zeros(48,1),2));

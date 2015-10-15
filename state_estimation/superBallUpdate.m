@@ -17,8 +17,8 @@ if nargin>1
     tspan = tspan1;
     internalMeasureIndices = [1*ones(1,11), 2*ones(1,10), 3*ones(1,9), 4*ones(1,8), 5*ones(1,7), 6*ones(1,6), 7*ones(1,5), 8*ones(1,4), 9*ones(1,3), 10*ones(1,2), 11*ones(1,1);
         2:12,         3:12,         4:12,        5:12,        6:12,        7:12,        8:12,        9:12,        10:12,       11:12,        12:12];
-    externalMeasureIndices = [1*ones(1,4), 2*ones(1,4), 3*ones(1,4), 4*ones(1,4), 5*ones(1,4), 6*ones(1,4), 7*ones(1,4), 8*ones(1,4), 9*ones(1,4), 10*ones(1,4), 11*ones(1,4), 12*ones(1,4);
-        13:16,       13:16,       13:16,       13:16,       13:16,       13:16,       13:16,       13:16,       13:16,       13:16,        13:16,        13:16];
+    externalMeasureIndices = [1*ones(1,8), 2*ones(1,8), 3*ones(1,8), 4*ones(1,8), 5*ones(1,8), 6*ones(1,8), 7*ones(1,8), 8*ones(1,8), 9*ones(1,8), 10*ones(1,8), 11*ones(1,8), 12*ones(1,8);
+        13:20,       13:20,       13:20,       13:20,       13:20,       13:20,       13:20,       13:20,       13:20,       13:20,        13:20,        13:20];
     allMeasureIndices = [internalMeasureIndices externalMeasureIndices];
     ax = ax1;
     texth = text1;
@@ -30,7 +30,7 @@ if nargin>1
     lastUpdatedStringLengths = restLengths1;
     
     load('offsets.mat');
-    offsets = reshape(offsets',48,1);
+    offsets = [reshape(offsets',48,1); 3.8*ones(48,1)];
     state = superBall.ySimUKF(:);
 
 else if nargin == 1
@@ -136,10 +136,38 @@ else if nargin == 1
     nodes(7,:);     baseStationPoints(4,:);    nodes(8,:);     baseStationPoints(4,:);
     nodes(9,:);     baseStationPoints(4,:);    nodes(10,:);    baseStationPoints(4,:);
     nodes(11,:);    baseStationPoints(4,:);    nodes(12,:);    baseStationPoints(4,:);
+    
+    nodes(1,:);     baseStationPoints(5,:);    nodes(2,:);     baseStationPoints(5,:);
+    nodes(3,:);     baseStationPoints(5,:);    nodes(4,:);     baseStationPoints(5,:);
+    nodes(5,:);     baseStationPoints(5,:);    nodes(6,:);     baseStationPoints(5,:);
+    nodes(7,:);     baseStationPoints(5,:);    nodes(8,:);     baseStationPoints(5,:);
+    nodes(9,:);     baseStationPoints(5,:);    nodes(10,:);    baseStationPoints(5,:);
+    nodes(11,:);    baseStationPoints(5,:);    nodes(12,:);    baseStationPoints(5,:);
+    
+    nodes(1,:);     baseStationPoints(6,:);    nodes(2,:);     baseStationPoints(6,:);
+    nodes(3,:);     baseStationPoints(6,:);    nodes(4,:);     baseStationPoints(6,:);
+    nodes(5,:);     baseStationPoints(6,:);    nodes(6,:);     baseStationPoints(6,:);
+    nodes(7,:);     baseStationPoints(6,:);    nodes(8,:);     baseStationPoints(6,:);
+    nodes(9,:);     baseStationPoints(6,:);    nodes(10,:);    baseStationPoints(6,:);
+    nodes(11,:);    baseStationPoints(6,:);    nodes(12,:);    baseStationPoints(6,:);
+    
+    nodes(1,:);     baseStationPoints(7,:);    nodes(2,:);     baseStationPoints(7,:);
+    nodes(3,:);     baseStationPoints(7,:);    nodes(4,:);     baseStationPoints(7,:);
+    nodes(5,:);     baseStationPoints(7,:);    nodes(6,:);     baseStationPoints(7,:);
+    nodes(7,:);     baseStationPoints(7,:);    nodes(8,:);     baseStationPoints(7,:);
+    nodes(9,:);     baseStationPoints(7,:);    nodes(10,:);    baseStationPoints(7,:);
+    nodes(11,:);    baseStationPoints(7,:);    nodes(12,:);    baseStationPoints(7,:);
+    
+    nodes(1,:);     baseStationPoints(8,:);    nodes(2,:);     baseStationPoints(8,:);
+    nodes(3,:);     baseStationPoints(8,:);    nodes(4,:);     baseStationPoints(8,:);
+    nodes(5,:);     baseStationPoints(8,:);    nodes(6,:);     baseStationPoints(8,:);
+    nodes(7,:);     baseStationPoints(8,:);    nodes(8,:);     baseStationPoints(8,:);
+    nodes(9,:);     baseStationPoints(8,:);    nodes(10,:);    baseStationPoints(8,:);
+    nodes(11,:);    baseStationPoints(8,:);    nodes(12,:);    baseStationPoints(8,:);
     ];
-        measureLines = [67:4:114, 68:4:114, 69:4:114, 70:4:114] ;
+        measureLines = [67:8:162, 68:8:162, 69:8:162, 70:8:162, 71:8:162, 72:8:162, 73:8:162, 74:8:162] ;
 
-        for j = 1: 48
+        for j = 1: 96
 %             texth(j+16+9).Position = (lengthMeasures(2*j-1,:) + lengthMeasures(2*j,:)*3)/4;
             if(isUpdatedMeasurement(measureLines(j)))
 %             texth(j+16+9).String = num2str(rangingMeasures(measureLines(j))-baseOffsets(measureLines(j)),2);
@@ -149,8 +177,8 @@ else if nargin == 1
             end
         end
         
-        for j =1:4
-        lines(j).XData = lengthMeasures(24*j+(-23:0),1); lines(j).YData = lengthMeasures(24*j+(-23:0),2); lines(j).ZData = lengthMeasures(24*j+(-23:0),3);
+        for j =1:8
+            lines(j).XData = lengthMeasures(24*j+(-23:0),1); lines(j).YData = lengthMeasures(24*j+(-23:0),2); lines(j).ZData = lengthMeasures(24*j+(-23:0),3);
         end
         
         state = [state superBall.ySimUKF(:)];
