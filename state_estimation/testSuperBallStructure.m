@@ -6,7 +6,7 @@ close all
 barLength = 1.4;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
-lims = 2*barLength;
+lims = 10*barLength;
 gravity = 9.81;             % m/s^2
 tspan =1/10;                % time between plot updates in seconds
 delT = 0.001;               % timestep for dynamic sim in seconds
@@ -28,15 +28,27 @@ global goodRestlengths_all;
 global hvid;
 global f;
 
+%%% OUTSIDE %%%
 baseStationPoints = [
-     5.3500    1.2500    0.3500; %13
-     2.4200    1.0000    2.6600; %14
-     0              0    0.3500; %15 (17)
-    -0.9600    2.3500    0.3500; %16
-     0.5000   -0.5000    0.3500; %17
-    -0.5000    0.5000    0.3500; %18
-    -0.5000   -0.5000    0.3500; %19
-     0.5000    0.5000    0.3500];%20
+     3.1500    11.160    0.5000; %13
+     6.4500    9.2000    2.8000; %14
+     9.9700    0.0000    0.5000; %15 
+     0.0000    0.0000    0.5000; %16
+     13.150    11.160    0.5000; %17
+     16.160    2.0000    2.8000; %18
+     16.160    5.5700    0.5000; %19
+     0.0000    5.5700    0.5000];%20
+
+ %%% INSIDE %%%
+% baseStationPoints = [
+%      5.3500    1.2500    0.3500; %13
+%      2.4200    1.0000    2.6600; %14
+%      0              0    0.3500; %15 (17)
+%     -0.9600    2.3500    0.3500; %16
+%      0.5000   -0.5000    0.3500; %17
+%     -0.5000    0.5000    0.3500; %18
+%     -0.5000   -0.5000    0.3500; %19
+%      0.5000    0.5000    0.3500];%20
 labels = {'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'};
 
 
@@ -57,15 +69,15 @@ nodes = [
 
 %%%%%% This rotate the robot to face 3-6-7 %%%%%%%%%%%
 %%%%%% Used in the local/external video tests %%%%%%%%
-% HH  = makehgtform('axisrotate',[0 1 0],3.14);
-% HH  = makehgtform('axisrotate',[0 1 0],0.7)*HH;
-% HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
-% HH  = makehgtform('axisrotate',[0 0 1],-1.6)*HH;
+HH  = makehgtform('axisrotate',[0 1 0],3.14);
+HH  = makehgtform('axisrotate',[0 1 0],0.7)*HH;
+HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
+HH  = makehgtform('axisrotate',[0 0 1],-1.6)*HH;
 
 %%%%%% This rotate the robot to face 6-8-9 %%%%%%%%%%%
 %%%%%% Used in the flop tests %%%%%%%%%%%%%%%%%%%%%%%%
-HH  = makehgtform('axisrotate',[0 1 0],-0.6);
-HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
+% HH  = makehgtform('axisrotate',[0 1 0],-0.6);
+% HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
 % HH  = makehgtform('axisrotate',[0 0 1],1.7)*HH;
 
 nodes = (HH(1:3,1:3)*nodes')';

@@ -185,7 +185,7 @@ else if nargin == 1
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         x_Avg = mean( superBallUKFPlot.nodePoints(:,1));
         y_Avg = mean( superBallUKFPlot.nodePoints(:,2));
-        lims = 2*barlength;
+        lims = 10*barlength;
         xlim(ax(1),[-lims lims]+x_Avg);
         ylim(ax(1),[-lims lims]+y_Avg);
         
