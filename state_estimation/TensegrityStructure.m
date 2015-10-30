@@ -18,6 +18,8 @@ classdef TensegrityStructure < handle
         F                     %n by 3 matrix nodal forces
         quadProgOptions       %options for quad prog
         
+        stringInitRestLengths % 2 by 1 matrix with active and passive starting rest lengths
+        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%Added for dynamics %%%%%%%%%%%%%%%%%%
         simStruct %a structure containing most variables needed for simulation functions
         %this improves efficiency because we don't need to pass
@@ -44,6 +46,7 @@ classdef TensegrityStructure < handle
         P
         lengthMeasureIndices
         baseStationPoints
+        goodAngles
         
     end
     
@@ -294,7 +297,7 @@ classdef TensegrityStructure < handle
             end
             if(isempty(obj.ySimUKF))
                 obj.ySimUKF = [obj.nodePoints; zeros(size(obj.nodePoints))];
-                obj.P = eye((nUKF-1)/2);
+                obj.P = 0.7*eye((nUKF-1)/2);
                 lastContact = repmat(obj.nodePoints(:,1:2),1,nUKF);
             else
                 y = obj.ySimUKF;
@@ -310,7 +313,7 @@ classdef TensegrityStructure < handle
             beta = 2;
             ki = 0;
             lambda=alpha^2*(L+ki)-L;
-            c=L+lambda;
+            c=(L+lambda);
             Ws=[lambda/c , (0.5/c)*ones(1,2*L)];
             Ws = ones(size(Ws))/length(Ws);
             fN = sim.fN;
@@ -323,9 +326,9 @@ classdef TensegrityStructure < handle
             xx = reshape(x,obj.n*2,[]); %precursor to keep fixed nodes in place
             X(fN,:) = repmat(xx(fN,:),1,nUKF); %Used to keep fixed nodes in place
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
-            
-            Q_noise = 0.15^2*eye(L); %process noise covariance matrix
-            R_noise = blkdiag(0.01^2*eye(6),0.05^2*eye(m-6)); %measurement noise covariance matrix
+            nAngle = sum(obj.goodAngles);
+            Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
+            R_noise = blkdiag(0.1^2*eye(nAngle),0.029^2*eye(m-nAngle)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;
@@ -361,14 +364,22 @@ classdef TensegrityStructure < handle
             P1 = X2*diag(Wc)*X2'+Q_noise; %State covariance?
             
             %%%%%%%%%%%%% Unscented Transformation of Measurements %%%%%%%%
-            barVec = memberNodeXYZ((obj.ss+1):(obj.bb+obj.ss),:);
+            barVec = -memberNodeXYZ((obj.ss+1):(obj.bb+obj.ss),:);
             barNorm = sqrt(barVec(:,ind1).^2 + barVec(:,ind2).^2 + barVec(:,ind3).^2);
             barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
+            
+%             xyzNodesOld = xyzNodes;
+            for i=1:3:length(xyzNodes)
+                xyzNodesAvg = repmat(mean(xyzNodes(:,i:i+2)), 12, 1);
+                xyzNodes(:,i:i+2) = (xyzNodes(:,i:i+2) - xyzNodesAvg)*(1.4/1.7) + xyzNodesAvg;
+            end
+%             (xyzNodesOld - xyzNodes)
             
             yyPlusBase = [xyzNodes; repmat(obj.baseStationPoints,1,nUKF)];
             allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
             lengthMeasures = sqrt(allVectors(:,ind1) + allVectors(:,ind2) + allVectors(:,ind3));
-            Z1 = [barAngleFromVert;
+                    
+            Z1 = [barAngleFromVert(obj.goodAngles,:);
                 lengthMeasures];
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]);
             z1 = Z1*Ws';                                %Weighted average of forward propagated measurements
@@ -377,7 +388,10 @@ classdef TensegrityStructure < handle
             P12=X2*diag(Wc)*Z2';                        %Transformed cross covariance matrix
             K=P12/P2;                                   %kalman gain
             x=x1+K*(z-z1);                              %state update
-            disp(z')
+%              fprintf('%7.2f', z(1:nAngle));
+%              fprintf('\r\n');
+%             fprintf('%7.2f', (z1(1:nAngle)))
+%             fprintf('\r\n')
             obj.P = P1 -K*P12';                         %covariance update
             obj.ySimUKF = reshape(x,[],3);
             
@@ -405,7 +419,6 @@ classdef TensegrityStructure < handle
                 staticF = kFP*(lastContact - nodeXYZs(:,ind12)) - kFD*xyDot;
                 staticNotApplied = ((staticF(:,ind11).^2 +  staticF(:,ind22).^2) > (muS*normForces).^2)|notTouching;
                 staticF(staticNotApplied(:,Gindex)) = 0;
-                staticF = (staticF);
                 w = (1 - exp(-kk*xyDotMag))./xyDotMag;
                 w(xyDotMag<1e-9) = kk;
                 dynamicFmag =  - muD * normForces .*w ;
