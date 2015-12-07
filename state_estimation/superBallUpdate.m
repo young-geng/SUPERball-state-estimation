@@ -30,13 +30,15 @@ if nargin>1
     lastUpdatedStringLengths = restLengths1;
     
     load('offsets.mat');
-    offsets = [reshape(offsets',48,1); 3.8*ones(48,1)];
+    offsets = [reshape(offsets',96,1)];
+    %offsets = [3.8*ones(48,1);3.8*ones(48,1)];
     state = superBall.ySimUKF(:);
 
 else if nargin == 1
         
         i = i+1;
         numMotorPos = 12;
+        numEndcapVec = 12*3; %12 ends with xyz per bar
         msgData = superBall1;
         motorPos = msgData(end - (numMotorPos-1) : end);
         restLengths = superBall.stringInitRestLengths(1) -               abs(((0.009) *            (1000/109))*motorPos); % 1 - 2*r*pi
@@ -68,7 +70,7 @@ else if nargin == 1
 %             dtSinceLastGoodLength(isUpdatedMeasurement) = 1; 
 %             lastUpdatedRangingMeasures(isUpdatedMeasurement) = rangingMeasures(isUpdatedMeasurement);
 %         else
-        rangingMeasures = msgData(1:end-(6+numMotorPos));
+        rangingMeasures = msgData(1:end-(numEndcapVec+numMotorPos));
         updateVel = zeros(size(rangingMeasures));
         isBar = [1, 22, 39, 52, 61, 66];
         isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
@@ -83,10 +85,30 @@ else if nargin == 1
         lastUpdatedRangingMeasures(isUpdatedMeasurement) = rangingMeasures(isUpdatedMeasurement);
 %         end
                      
-        allAngleMeasures = msgData((end-(5+numMotorPos)): (end-numMotorPos));
-        isGoodAngle = ~isnan(allAngleMeasures);
-        superBall.goodAngles = isGoodAngle;
-        angleMeasures = allAngleMeasures(isGoodAngle);
+        allBarVectors = msgData((end-((numEndcapVec-1)+numMotorPos)): (end-numMotorPos)); % Grab all 12 end cap vectors
+        isGoodVectorValue = ~isnan(allBarVectors); 
+        allVectorValues = allBarVectors(isGoodVectorValue); % remove any nans
+        
+        isGoodVector = zeros(6,1);
+        vectorValues = zeros(6*3,1);
+        for k = 1:6
+            if isGoodVectorValue(((k-1)*6 + 1)) & isGoodVectorValue(((k-1)*6 + 1)+3)
+                %average
+                vectorValues(((k-1)*3 + 1):((k-1)*3 + 1)+2) = average_direction_vec(allVectorValues(((k-1)*6 + 1):((k-1)*6 + 1)+2),allVectorValues(((k-1)*6 + 1)+3:((k-1)*6 + 1)+5));
+                isGoodVector(k) = 1;
+            elseif isGoodVectorValue(((k-1)*6 + 1))
+                %use k
+                vectorValues(((k-1)*3 + 1):((k-1)*3 + 1)+2) = allVectorValues(((k-1)*6 + 1):((k-1)*6 + 1)+2);
+                isGoodVector(k) = 1;
+            elseif isGoodVectorValue(((k-1)*6 + 1)+3)
+                %use k+3
+                vectorValues(((k-1)*3 + 1):((k-1)*3 + 1)+2) = allVectorValues(((k-1)*6 + 1)+3:((k-1)*6 + 1)+5);
+                isGoodVector(k) = 1;
+            end
+        end
+        
+        superBall.goodVectors = isGoodVector; 
+        
 
         %%%%%%%%%%%%Input Measurements and commands %%%%%%%%%%%%
         %superBall.simStructUKF.stringRestLengths; %TODO: Need to implement this
@@ -96,7 +118,7 @@ else if nargin == 1
         goodLengths = rangingMeasures(isUpdatedMeasurement) - baseOffsets(isUpdatedMeasurement);
         rangingMeasures(~isUpdatedMeasurement) = nan;
         updateVel_all = [updateVel_all rangingMeasures];
-        superBall.measurementUKFInput = [angleMeasures; goodLengths]; %UKF measures
+        superBall.measurementUKFInput = [vectorValues; goodLengths]; %UKF measures
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         ukfUpdate(superBall,tspan);
@@ -185,7 +207,7 @@ else if nargin == 1
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         x_Avg = mean( superBallUKFPlot.nodePoints(:,1));
         y_Avg = mean( superBallUKFPlot.nodePoints(:,2));
-        lims = 10*barlength;
+        lims = 4*barlength;
         xlim(ax(1),[-lims lims]+x_Avg);
         ylim(ax(1),[-lims lims]+y_Avg);
         

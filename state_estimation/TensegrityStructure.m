@@ -47,6 +47,7 @@ classdef TensegrityStructure < handle
         lengthMeasureIndices
         baseStationPoints
         goodAngles
+        goodVectors
         
     end
     
@@ -124,7 +125,13 @@ classdef TensegrityStructure < handle
             end
             
             obj.quadProgOptions = optimoptions('quadprog','Algorithm',  'interior-point-convex','Display','off');
-            obj.groundHeight = 0;
+            
+            %%% When gravity if off, turn off ground reaction forces
+            if(grav == 0)
+                obj.groundHeight = -100;
+            else
+                obj.groundHeight = 0;
+            end
             %%%%%%%%%%%%%%%%%%%%Dynamics Variables%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %these are quick vector lists of bars and strings inserted into simstruct
             %used for efficiently computing string and bar lengths etc. so
@@ -253,24 +260,28 @@ classdef TensegrityStructure < handle
                 nodalMemberForces = CC*memberForces; %sum of the forces at each node exerted by caple and rod
                 
                 %%%%%%%%%%%%%% Ground Friction modeling %%%%%%%%%%
-                %update points not in contact
-                notTouching = (nodeXYZ(:,3) - groundH)>0;
-                %Compute normal forces
-                normForces = (groundH-nodeXYZ(:,3)).*(Kp - Kd*nodeXYZdot(:,3));
-                normForces(notTouching) = 0; %norm forces not touching are zero
-                xyDot = nodeXYZdot(:,1:2);
-                %Possible static friction to apply
-                staticF = kFP*(lastContact - nodeXYZ(:,1:2)) - kFD*xyDot;
-                staticNotApplied = (sum((staticF).^2,2) > (muS*normForces).^2)|notTouching;
-                staticF(staticNotApplied,:) = 0;
-                xyDotMag = sqrt(sum((xyDot).^2,2));
-                w = (1 - exp(-kk*xyDotMag))./xyDotMag;
-                w(xyDotMag<1e-9) = kk;
-                dynamicFmag =  - muD * normForces .*w ;
-                dynamicF = dynamicFmag(:,[1 1]).* xyDot;
-                dynamicF(~staticNotApplied,:) = 0;
-                tangentForces = staticF + dynamicF ;
-                groundForces = [tangentForces normForces];
+                if( groundH <= -100)
+                    groundForces = [zeros(size(nodeXYZ(:,3))) zeros(size(nodeXYZ(:,3)))];
+                else                
+                    %update points not in contact
+                    notTouching = (nodeXYZ(:,3) - groundH)>0;
+                    %Compute normal forces
+                    normForces = (groundH-nodeXYZ(:,3)).*(Kp - Kd*nodeXYZdot(:,3));
+                    normForces(notTouching) = 0; %norm forces not touching are zero
+                    xyDot = nodeXYZdot(:,1:2);
+                    %Possible static friction to apply
+                    staticF = kFP*(lastContact - nodeXYZ(:,1:2)) - kFD*xyDot;
+                    staticNotApplied = (sum((staticF).^2,2) > (muS*normForces).^2)|notTouching;
+                    staticF(staticNotApplied,:) = 0;
+                    xyDotMag = sqrt(sum((xyDot).^2,2));
+                    w = (1 - exp(-kk*xyDotMag))./xyDotMag;
+                    w(xyDotMag<1e-9) = kk;
+                    dynamicFmag =  - muD * normForces .*w ;
+                    dynamicF = dynamicFmag(:,[1 1]).* xyDot;
+                    dynamicF(~staticNotApplied,:) = 0;
+                    tangentForces = staticF + dynamicF ;
+                    groundForces = [tangentForces normForces];
+                end
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
                 nodeXYZdoubleDot = (nodalMemberForces+groundForces).*M;
@@ -326,9 +337,10 @@ classdef TensegrityStructure < handle
             xx = reshape(x,obj.n*2,[]); %precursor to keep fixed nodes in place
             X(fN,:) = repmat(xx(fN,:),1,nUKF); %Used to keep fixed nodes in place
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
-            nAngle = sum(obj.goodAngles);
+            %nAngle = sum(obj.goodAngles);
+            nVector = sum(obj.goodVectors); %multiply by 3 for xyz measurements
             Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.1^2*eye(nAngle),0.029^2*eye(m-nAngle)); %measurement noise covariance matrix
+            R_noise = blkdiag(0.1^2*eye(nVector),0.029^2*eye(m-nVector)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;
@@ -366,7 +378,11 @@ classdef TensegrityStructure < handle
             %%%%%%%%%%%%% Unscented Transformation of Measurements %%%%%%%%
             barVec = -memberNodeXYZ((obj.ss+1):(obj.bb+obj.ss),:);
             barNorm = sqrt(barVec(:,ind1).^2 + barVec(:,ind2).^2 + barVec(:,ind3).^2);
-            barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
+            barVectorX = barVec(:,ind1)./barNorm;
+            barVectorY = barVec(:,ind2)./barNorm;
+            barVectorZ = barVec(:,ind3)./barNorm;
+            %%% old code used in ICRA 2016 paper %%%
+%             barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
             
 %             xyzNodesOld = xyzNodes;
             for i=1:3:length(xyzNodes)
@@ -379,7 +395,9 @@ classdef TensegrityStructure < handle
             allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
             lengthMeasures = sqrt(allVectors(:,ind1) + allVectors(:,ind2) + allVectors(:,ind3));
                     
-            Z1 = [barAngleFromVert(obj.goodAngles,:);
+            Z1 = [barVectorX(obj.goodVectors,:);
+                barVectorY(obj.goodVectors,:);
+                barVectorZ(obj.goodVectors,:);
                 lengthMeasures];
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]);
             z1 = Z1*Ws';                                %Weighted average of forward propagated measurements

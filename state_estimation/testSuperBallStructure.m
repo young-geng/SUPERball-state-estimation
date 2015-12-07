@@ -6,8 +6,13 @@ close all
 barLength = 1.4;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
-lims = 10*barLength;
-gravity = 9.81;             % m/s^2
+lims = 4*barLength;
+
+%%% Need to turn off gravity for initial position and orientation finding 
+gravity = 0.0; 
+%gravity = 9.81;             % m/s^2
+%%% Need to turn off gravity for initial position and orientation finding 
+
 tspan =1/10;                % time between plot updates in seconds
 delT = 0.001;               % timestep for dynamic sim in seconds
 delTUKF  = 0.005;
@@ -28,16 +33,22 @@ global goodRestlengths_all;
 global hvid;
 global f;
 
+%%% Calibrated %%%
+load('positions.mat');
+positions_and_nodes = [positions, double(fixed_nodes')];
+reordered_positions = sortrows(positions_and_nodes,4);
+baseStationPoints = reordered_positions(:,1:3);
+
 %%% OUTSIDE %%%
-baseStationPoints = [
-     3.1500    11.160    0.5000; %13
-     6.4500    9.2000    2.8000; %14
-     9.9700    0.0000    0.5000; %15 
-     0.0000    0.0000    0.5000; %16
-     13.150    11.160    0.5000; %17
-     16.160    2.0000    2.8000; %18
-     16.160    5.5700    0.5000; %19
-     0.0000    5.5700    0.5000];%20
+% baseStationPoints = [
+%      3.1500    11.160    0.5000; %13
+%      6.4500    9.2000    2.8000; %14
+%      9.9700    0.0000    0.5000; %15 
+%      0.0000    0.0000    0.5000; %16
+%      13.150    11.160    0.5000; %17
+%      16.160    2.0000    2.8000; %18
+%      16.160    5.5700    0.5000; %19
+%      0.0000    5.5700    0.5000];%20
 
  %%% INSIDE %%%
 % baseStationPoints = [
