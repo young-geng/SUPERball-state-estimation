@@ -6,7 +6,7 @@ close all
 barLength = 1.4;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
-lims = 4*barLength;
+lims = 2.5*barLength;
 
 %%% Need to turn off gravity for initial position and orientation finding 
 gravity = 0.0; 
@@ -38,6 +38,8 @@ load('positions.mat');
 positions_and_nodes = [positions, double(fixed_nodes')];
 reordered_positions = sortrows(positions_and_nodes,4);
 baseStationPoints = reordered_positions(:,1:3);
+% TODO:Hack to get the world correct. Should automate this based on robot
+baseStationPoints(:,3:3) = (baseStationPoints(:,3:3)*-1)+1.75;
 
 %%% OUTSIDE %%%
 % baseStationPoints = [
@@ -247,8 +249,9 @@ for i =1:48
     textPositions(i,:) = (lengthMeasures(2*i-1,:) + lengthMeasures(2*i,:)*3)/4;
 end
 for i =1:8
-lines(i) = plot3(lengthMeasures(24*i+(-23:0),1),lengthMeasures(24*i+(-23:0),2),lengthMeasures(24*i+(-23:0),3));
+    lines(i) = plot3(lengthMeasures(24*i+(-23:0),1),lengthMeasures(24*i+(-23:0),2),lengthMeasures(24*i+(-23:0),3));
 end
+
 text1 = cellstr(num2str(zeros(48,1),2));
 % hh2 = text(textPositions(:,1),textPositions(:,2),textPositions(:,3),text1,'FontSize',8);
 % hh = [hh;hh2];

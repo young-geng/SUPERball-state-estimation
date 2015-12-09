@@ -338,9 +338,10 @@ classdef TensegrityStructure < handle
             X(fN,:) = repmat(xx(fN,:),1,nUKF); %Used to keep fixed nodes in place
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
             %nAngle = sum(obj.goodAngles);
-            nVector = sum(obj.goodVectors); %multiply by 3 for xyz measurements
+            nVector = sum(obj.goodVectors);
             Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
             R_noise = blkdiag(0.1^2*eye(nVector),0.029^2*eye(m-nVector)); %measurement noise covariance matrix
+            %R_noise = blkdiag(1.^2*eye(nVector),0.18^2*eye(m-nVector)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;
@@ -377,6 +378,7 @@ classdef TensegrityStructure < handle
             
             %%%%%%%%%%%%% Unscented Transformation of Measurements %%%%%%%%
             barVec = -memberNodeXYZ((obj.ss+1):(obj.bb+obj.ss),:);
+            barVec(~obj.goodVectors) = 0;
             barNorm = sqrt(barVec(:,ind1).^2 + barVec(:,ind2).^2 + barVec(:,ind3).^2);
             barVectorX = barVec(:,ind1)./barNorm;
             barVectorY = barVec(:,ind2)./barNorm;
@@ -395,9 +397,9 @@ classdef TensegrityStructure < handle
             allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
             lengthMeasures = sqrt(allVectors(:,ind1) + allVectors(:,ind2) + allVectors(:,ind3));
                     
-            Z1 = [barVectorX(obj.goodVectors,:);
-                barVectorY(obj.goodVectors,:);
-                barVectorZ(obj.goodVectors,:);
+            Z1 = [barVectorX;
+                barVectorY;
+                barVectorZ;
                 lengthMeasures];
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]);
             z1 = Z1*Ws';                                %Weighted average of forward propagated measurements

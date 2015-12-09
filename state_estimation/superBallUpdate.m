@@ -87,22 +87,26 @@ else if nargin == 1
                      
         allBarVectors = msgData((end-((numEndcapVec-1)+numMotorPos)): (end-numMotorPos)); % Grab all 12 end cap vectors
         isGoodVectorValue = ~isnan(allBarVectors); 
-        allVectorValues = allBarVectors(isGoodVectorValue); % remove any nans
-        
+        %allVectorValues = allBarVectors(isGoodVectorValue); % remove any nans
+        allBarVectors(~isGoodVectorValue) = 0;
+        allBarVectors
         isGoodVector = zeros(6,1);
         vectorValues = zeros(6*3,1);
         for k = 1:6
             if isGoodVectorValue(((k-1)*6 + 1)) & isGoodVectorValue(((k-1)*6 + 1)+3)
                 %average
-                vectorValues(((k-1)*3 + 1):((k-1)*3 + 1)+2) = average_direction_vec(allVectorValues(((k-1)*6 + 1):((k-1)*6 + 1)+2),allVectorValues(((k-1)*6 + 1)+3:((k-1)*6 + 1)+5));
+                vectorValues(((k-1)*3 + 1):((k-1)*3 + 1)+2) = average_direction_vec(allBarVectors(((k-1)*6 + 1):((k-1)*6 + 1)+2),allBarVectors(((k-1)*6 + 1)+3:((k-1)*6 + 1)+5));
                 isGoodVector(k) = 1;
             elseif isGoodVectorValue(((k-1)*6 + 1))
                 %use k
-                vectorValues(((k-1)*3 + 1):((k-1)*3 + 1)+2) = allVectorValues(((k-1)*6 + 1):((k-1)*6 + 1)+2);
+                vectorValues(((k-1)*3 + 1):((k-1)*3 + 1)+2) = allBarVectors(((k-1)*6 + 1):((k-1)*6 + 1)+2);
                 isGoodVector(k) = 1;
             elseif isGoodVectorValue(((k-1)*6 + 1)+3)
                 %use k+3
-                vectorValues(((k-1)*3 + 1):((k-1)*3 + 1)+2) = allVectorValues(((k-1)*6 + 1)+3:((k-1)*6 + 1)+5);
+                %size(vectorValues)
+                %size(allVectorValues)
+                %k
+                vectorValues(((k-1)*3 + 1):((k-1)*3 + 1)+2) = allBarVectors(((k-1)*6 + 1)+3:((k-1)*6 + 1)+5);
                 isGoodVector(k) = 1;
             end
         end
@@ -207,7 +211,7 @@ else if nargin == 1
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         x_Avg = mean( superBallUKFPlot.nodePoints(:,1));
         y_Avg = mean( superBallUKFPlot.nodePoints(:,2));
-        lims = 4*barlength;
+        lims = 2.5*barlength;
         xlim(ax(1),[-lims lims]+x_Avg);
         ylim(ax(1),[-lims lims]+y_Avg);
         
