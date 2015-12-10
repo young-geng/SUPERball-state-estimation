@@ -80,6 +80,10 @@ nodes = [
    -barLength*0.5  -barSpacing       0;
     ];
 
+%random initial orientation of the robot?
+%[random_rotation,~] = qr(randn(3));
+%nodes = nodes*random_rotation;
+
 %%%%%% This rotate the robot to face 3-6-7 %%%%%%%%%%%
 %%%%%% Used in the local/external video tests %%%%%%%%
 HH  = makehgtform('axisrotate',[0 1 0],3.14);
@@ -169,7 +173,7 @@ groundTruthLines_test3 = [
 %     % Flop 2
 %     [2.77	1.14	0]; % 12'
 %     [3.58   0.43    0]; % 7
-%     [3.80   1.40    0]; % 4
+%     [0   1.40    0]; % 4
 % %     % Flop 3
 % %     [3.90   1.46    0]; % 4'
 % %     [4.93   1.20    0]; % 11
@@ -291,8 +295,8 @@ ax1  = ax2;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength);
-%rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
-rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+%rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 
 

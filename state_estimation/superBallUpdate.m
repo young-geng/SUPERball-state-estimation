@@ -31,7 +31,15 @@ if nargin>1
     lastUpdatedStringLengths = restLengths1;
     
     load('offsets.mat');
-    offsets = [reshape(offsets',96,1)];
+    offsets_raw = offsets;%[reshape(offsets',96,1)];
+    offsets = zeros(size(externalMeasureIndices,2),1)+3.8;
+    for oidx=1:size(offset_variable_to_pair,1)
+        %find matching index in external measure indices
+        fidx = find(ismember(allMeasureIndices',offset_variable_to_pair(oidx,:),'rows'));
+        offsets(fidx) = offsets_raw(oidx);
+    end
+    
+    
     %offsets = [3.8*ones(48,1);3.8*ones(48,1)];
     state = superBall.ySimUKF(:);
 
@@ -75,7 +83,7 @@ else if nargin == 1
         updateVel = zeros(size(rangingMeasures));
         isBar = [1, 22, 39, 52, 61, 66];
         isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
-        rangingMeasures(:) = nan; %Disables all ranging measures
+        %rangingMeasures(:) = nan; %Disables all ranging measures
         rangingMeasures(isInternal) = 0;
         rangingMeasures(isBar) = barlength*1.4/1.7;       
         rangingMeasures(isnan(rangingMeasures)) = 0;
