@@ -23,6 +23,7 @@ if nargin>1
     ax = ax1;
     texth = text1;
     barlength = barlength1;
+    
     lines = lines1;
     dtSinceLastGoodLength = ones(size(allMeasureIndices,2),1);
     lastUpdatedRangingMeasures = dtSinceLastGoodLength;
@@ -76,7 +77,7 @@ else if nargin == 1
         isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
         rangingMeasures(:) = nan; %Disables all ranging measures
         rangingMeasures(isInternal) = 0;
-        rangingMeasures(isBar) = barlength;       
+        rangingMeasures(isBar) = barlength*1.4/1.7;       
         rangingMeasures(isnan(rangingMeasures)) = 0;
         isNewMeasurement = rangingMeasures > 0;
         updateVel(isNewMeasurement) = (rangingMeasures(isNewMeasurement) - lastUpdatedRangingMeasures(isNewMeasurement))./(dtSinceLastGoodLength(isNewMeasurement)*tspan);
@@ -116,7 +117,7 @@ else if nargin == 1
 
         %%%%%%%%%%%%Input Measurements and commands %%%%%%%%%%%%
         %superBall.simStructUKF.stringRestLengths; %TODO: Need to implement this
-        baseOffsets = [3.8*ones(length(isInternal),1); offsets];
+        baseOffsets = [3.8*zeros(length(isInternal),1); offsets];
         
         superBall.lengthMeasureIndices = allMeasureIndices(:,isUpdatedMeasurement);
         %rangingMeasures

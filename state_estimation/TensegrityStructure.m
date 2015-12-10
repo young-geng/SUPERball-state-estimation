@@ -418,12 +418,15 @@ classdef TensegrityStructure < handle
             %size(R_noise)
             %size(Z2)
             diag(R_noise)'
+            z'
+            z1'
             P2 = Z2*diag(Wc)*Z2'+R_noise;               %Measurement covariance
             P12=X2*diag(Wc)*Z2';                        %Transformed cross covariance matrix
             K=P12/P2;                                   %kalman gain
             %z'
             
             x=x1+K*(z-z1);                              %state update
+            norm(z-z1)
 %              fprintf('%7.2f', z(1:nAngle));
 %              fprintf('\r\n');
 %             fprintf('%7.2f', (z1(1:nAngle)))
