@@ -74,6 +74,7 @@ else if nargin == 1
         updateVel = zeros(size(rangingMeasures));
         isBar = [1, 22, 39, 52, 61, 66];
         isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
+        rangingMeasures(:) = nan; %Disables all ranging measures
         rangingMeasures(isInternal) = 0;
         rangingMeasures(isBar) = barlength;       
         rangingMeasures(isnan(rangingMeasures)) = 0;
@@ -89,7 +90,6 @@ else if nargin == 1
         isGoodVectorValue = ~isnan(allBarVectors); 
         %allVectorValues = allBarVectors(isGoodVectorValue); % remove any nans
         allBarVectors(~isGoodVectorValue) = 0;
-        allBarVectors
         isGoodVector = zeros(6,1);
         vectorValues = zeros(6*3,1);
         for k = 1:6
@@ -112,17 +112,23 @@ else if nargin == 1
         end
         
         superBall.goodVectors = isGoodVector; 
-        
+        %isGoodVector(2) = 1;
 
         %%%%%%%%%%%%Input Measurements and commands %%%%%%%%%%%%
         %superBall.simStructUKF.stringRestLengths; %TODO: Need to implement this
         baseOffsets = [3.8*ones(length(isInternal),1); offsets];
         
         superBall.lengthMeasureIndices = allMeasureIndices(:,isUpdatedMeasurement);
+        %rangingMeasures
         goodLengths = rangingMeasures(isUpdatedMeasurement) - baseOffsets(isUpdatedMeasurement);
         rangingMeasures(~isUpdatedMeasurement) = nan;
         updateVel_all = [updateVel_all rangingMeasures];
-        superBall.measurementUKFInput = [vectorValues; goodLengths]; %UKF measures
+        goodVectorValues = reshape(vectorValues,[3,numel(vectorValues)/3]);
+        goodVectorValues = goodVectorValues(:,logical(isGoodVector));
+        goodVectorValues = reshape(goodVectorValues,[numel(goodVectorValues),1]);
+        superBall.measurementUKFInput = [goodVectorValues; goodLengths]; %UKF measures
+        %vectorValues
+        %goodLengths
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         ukfUpdate(superBall,tspan);

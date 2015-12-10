@@ -3,7 +3,7 @@ clc
 clear all
 close all
 
-barLength = 1.4;
+barLength = 1.67;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
 lims = 2.5*barLength;

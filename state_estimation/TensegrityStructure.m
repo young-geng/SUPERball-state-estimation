@@ -340,8 +340,10 @@ classdef TensegrityStructure < handle
             %nAngle = sum(obj.goodAngles);
             nVector = sum(obj.goodVectors);
             Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.1^2*eye(nVector),0.029^2*eye(m-nVector)); %measurement noise covariance matrix
-            %R_noise = blkdiag(1.^2*eye(nVector),0.18^2*eye(m-nVector)); %measurement noise covariance matrix
+            R_noise = blkdiag(0.02^2*eye(nVector*3),0.029^2*eye(m-nVector*3)); %measurement noise covariance matrix
+            %if you reduce the IMU part of R_noise, then the filter becomes
+            %unstable. 
+            %R_noise = blkdiag(0.005^2*eye(nVector),0.029^2*eye(m-nVector)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             groundH = obj.groundHeight;
@@ -378,23 +380,31 @@ classdef TensegrityStructure < handle
             
             %%%%%%%%%%%%% Unscented Transformation of Measurements %%%%%%%%
             barVec = -memberNodeXYZ((obj.ss+1):(obj.bb+obj.ss),:);
-            barVec(~obj.goodVectors) = 0;
+            barVec = barVec(logical(obj.goodVectors),:);
+            %%barVec(~obj.goodVectors) = 0;
+            %obj.goodVectors
+            %size(barVec)
             barNorm = sqrt(barVec(:,ind1).^2 + barVec(:,ind2).^2 + barVec(:,ind3).^2);
             barVectorX = barVec(:,ind1)./barNorm;
             barVectorY = barVec(:,ind2)./barNorm;
             barVectorZ = barVec(:,ind3)./barNorm;
+            %barVec
+            %obj.baseStationPoints
+            %obj.lengthMeasureIndices
+            
             %%% old code used in ICRA 2016 paper %%%
 %             barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
             
 %             xyzNodesOld = xyzNodes;
             for i=1:3:length(xyzNodes)
                 xyzNodesAvg = repmat(mean(xyzNodes(:,i:i+2)), 12, 1);
-                xyzNodes(:,i:i+2) = (xyzNodes(:,i:i+2) - xyzNodesAvg)*(1.4/1.7) + xyzNodesAvg;
+                xyzNodes(:,i:i+2) = (xyzNodes(:,i:i+2) - xyzNodesAvg)*(1.4/1.7) + xyzNodesAvg; %hack to estimate actual nodal coordinates instead of end cap positions
             end
 %             (xyzNodesOld - xyzNodes)
             
             yyPlusBase = [xyzNodes; repmat(obj.baseStationPoints,1,nUKF)];
             allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
+            %size(allVectors)
             lengthMeasures = sqrt(allVectors(:,ind1) + allVectors(:,ind2) + allVectors(:,ind3));
                     
             Z1 = [barVectorX;
@@ -404,9 +414,15 @@ classdef TensegrityStructure < handle
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]);
             z1 = Z1*Ws';                                %Weighted average of forward propagated measurements
             Z2 = Z1 - z1(:,ones(1,nUKF));               %Measuremnets with average subtracted
+            disp 'R noise'
+            %size(R_noise)
+            %size(Z2)
+            diag(R_noise)'
             P2 = Z2*diag(Wc)*Z2'+R_noise;               %Measurement covariance
             P12=X2*diag(Wc)*Z2';                        %Transformed cross covariance matrix
             K=P12/P2;                                   %kalman gain
+            %z'
+            
             x=x1+K*(z-z1);                              %state update
 %              fprintf('%7.2f', z(1:nAngle));
 %              fprintf('\r\n');
