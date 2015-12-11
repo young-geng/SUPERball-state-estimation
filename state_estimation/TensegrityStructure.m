@@ -98,7 +98,7 @@ classdef TensegrityStructure < handle
             %%%%%%%%%%%%% Check for repeat bars or strings %%%%%%%%%%%%%
             B = unique([stringNodes barNodes]', 'rows');
             if size(B,1) ~= (obj.bb+obj.ss)
-                error('SOme bars or strings are repeated between node sets')
+                error('Some bars or strings are repeated between node sets')
             end
             
             %%%%%%%%%%%%% Build Connectivity matrices  %%%%%%%%%%%%%%%%%%
@@ -340,7 +340,7 @@ classdef TensegrityStructure < handle
             %nAngle = sum(obj.goodAngles);
             nVector = sum(obj.goodVectors);
             Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.03^2*eye(nVector*3),0.029^2*eye(m-nVector*3)); %measurement noise covariance matrix
+            R_noise = blkdiag(0.03^2*eye(nVector*3),0.03^2*eye(m-nVector*3)); %measurement noise covariance matrix
             %if you reduce the IMU part of R_noise, then the filter becomes
             %unstable. 
             %R_noise = blkdiag(0.005^2*eye(nVector),0.029^2*eye(m-nVector)); %measurement noise covariance matrix
@@ -468,7 +468,7 @@ classdef TensegrityStructure < handle
                 tangentForces = staticF + dynamicF ;
                 groundForces = [tangentForces, normForces];
                 groundForces = (groundForces(:,fIndex));
-                nodeXYZdoubleDot = (nodalMemberForces+groundForces).*M;
+                nodeXYZdoubleDot = (nodalMemberForces+groundForces).*M -nodeXYZdots*0.1; %added damping term
                 nodeXYZdoubleDot(:,3:3:end) = nodeXYZdoubleDot(:,3:3:end) - grav;
                 nodeXYZdoubleDot(fN,:) = 0;
             end
