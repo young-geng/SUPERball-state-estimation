@@ -81,8 +81,8 @@ nodes = [
     ];
 
 %random initial orientation of the robot?
-%[random_rotation,~] = qr(randn(3));
-%nodes = nodes*random_rotation;
+g[random_rotation,~] = qr(randn(3));
+nodes = nodes*random_rotation;
 
 %%%%%% This rotate the robot to face 3-6-7 %%%%%%%%%%%
 %%%%%% Used in the local/external video tests %%%%%%%%

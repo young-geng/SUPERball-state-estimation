@@ -96,6 +96,8 @@ else if nargin == 1
 %         end
                      
         allBarVectors = msgData((end-((numEndcapVec-1)+numMotorPos)): (end-numMotorPos)); % Grab all 12 end cap vectors
+        
+        %allBarVectors(4:end) = nan;
         isGoodVectorValue = ~isnan(allBarVectors); 
         %allVectorValues = allBarVectors(isGoodVectorValue); % remove any nans
         allBarVectors(~isGoodVectorValue) = 0;
