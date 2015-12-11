@@ -81,7 +81,7 @@ nodes = [
     ];
 
 %random initial orientation of the robot?
-g[random_rotation,~] = qr(randn(3));
+[random_rotation,~] = qr(randn(3));
 nodes = nodes*random_rotation;
 
 HH  = makehgtform('axisrotate',[0 0 1],0.8);
@@ -297,13 +297,14 @@ ax1  = ax2;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%% USE WITH REAL ROBOT %%%
-%superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
-%rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+
+superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
+rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%% USE WITH SIMULATED DATA FROM NTRT/GPS %%%
-superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
-rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+%superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
+%rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 
