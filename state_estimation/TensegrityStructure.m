@@ -468,7 +468,7 @@ classdef TensegrityStructure < handle
                 tangentForces = staticF + dynamicF ;
                 groundForces = [tangentForces, normForces];
                 groundForces = (groundForces(:,fIndex));
-                nodeXYZdoubleDot = (nodalMemberForces+groundForces).*M -nodeXYZdots*0.1; %added damping term
+                nodeXYZdoubleDot = (nodalMemberForces+groundForces).*M -nodeXYZdots*0.3; %added damping term
                 nodeXYZdoubleDot(:,3:3:end) = nodeXYZdoubleDot(:,3:3:end) - grav;
                 nodeXYZdoubleDot(fN,:) = 0;
             end
