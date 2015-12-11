@@ -1,4 +1,4 @@
-function superBallUpdate(superBall1,superBallUKFPlot1,tspan1,ax1,text1,barlength1,lines1,restLengths1)
+function superBallUpdate(superBall1,superBallUKFPlot1,tspan1,ax1,text1,barlength1,lines1,restLengths1,sim)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -32,11 +32,15 @@ if nargin>1
     
     load('offsets.mat');
     offsets_raw = offsets;%[reshape(offsets',96,1)];
-    offsets = zeros(size(externalMeasureIndices,2),1)+3.8;
-    for oidx=1:size(offset_variable_to_pair,1)
-        %find matching index in external measure indices
-        fidx = find(ismember(allMeasureIndices',offset_variable_to_pair(oidx,:),'rows'));
-        offsets(fidx) = offsets_raw(oidx);
+    if sim > 0
+        offsets = zeros(size(externalMeasureIndices,2),1)+3.8;
+        for oidx=1:size(offset_variable_to_pair,1)
+            %find matching index in external measure indices
+            fidx = find(ismember(allMeasureIndices',offset_variable_to_pair(oidx,:),'rows'));
+            offsets(fidx) = offsets_raw(oidx);
+        end
+    else
+        offsets = zeros(size(externalMeasureIndices,2),1);
     end
     
     
@@ -83,7 +87,7 @@ else if nargin == 1
         updateVel = zeros(size(rangingMeasures));
         isBar = [1, 22, 39, 52, 61, 66];
         isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
-        %rangingMeasures(:) = nan; %Disables all ranging measures
+        rangingMeasures(:) = nan; %Disables all ranging measures
         rangingMeasures(isInternal) = 0;
         rangingMeasures(isBar) = barlength*1.4/1.7;       
         rangingMeasures(isnan(rangingMeasures)) = 0;
@@ -136,7 +140,7 @@ else if nargin == 1
         updateVel_all = [updateVel_all rangingMeasures];
         goodVectorValues = reshape(vectorValues,[3,numel(vectorValues)/3]);
         goodVectorValues = goodVectorValues(:,logical(isGoodVector));
-        goodVectorValues = reshape(goodVectorValues,[numel(goodVectorValues),1]);
+        goodVectorValues = reshape(goodVectorValues',[numel(goodVectorValues),1]);
         superBall.measurementUKFInput = [goodVectorValues; goodLengths]; %UKF measures
         %vectorValues
         %goodLengths

@@ -84,12 +84,14 @@ nodes = [
 g[random_rotation,~] = qr(randn(3));
 nodes = nodes*random_rotation;
 
+HH  = makehgtform('axisrotate',[0 0 1],0.8);
+HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
 %%%%%% This rotate the robot to face 3-6-7 %%%%%%%%%%%
 %%%%%% Used in the local/external video tests %%%%%%%%
-HH  = makehgtform('axisrotate',[0 1 0],3.14);
-HH  = makehgtform('axisrotate',[0 1 0],0.7)*HH;
-HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
-HH  = makehgtform('axisrotate',[0 0 1],-1.6)*HH;
+% HH  = makehgtform('axisrotate',[0 1 0],3.14);
+% HH  = makehgtform('axisrotate',[0 1 0],0.7)*HH;
+% HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
+% HH  = makehgtform('axisrotate',[0 0 1],-1.6)*HH;
 
 %%%%%% This rotate the robot to face 6-8-9 %%%%%%%%%%%
 %%%%%% Used in the flop tests %%%%%%%%%%%%%%%%%%%%%%%%
@@ -294,9 +296,15 @@ ax1  = ax2;
 % f is already a figure obj
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength);
-rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
-%rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+%%%% USE WITH REAL ROBOT %%%
+%superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
+%rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%% USE WITH SIMULATED DATA FROM NTRT/GPS %%%
+superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
+rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 
 
