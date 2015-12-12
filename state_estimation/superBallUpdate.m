@@ -9,6 +9,8 @@ global updateVel_all;
 global goodRestlengths_all;
 global hvid;
 global f;
+global nodes;
+global user_defined_nodes;
 
 if nargin>1
     i = 0;
@@ -86,7 +88,9 @@ else if nargin == 1
         updateVel = zeros(size(rangingMeasures));
         isBar = [1, 22, 39, 52, 61, 66];
         isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
-        %rangingMeasures(:) = nan; %Disables all ranging measures
+        if user_defined_nodes == 0
+            rangingMeasures(:) = nan; %Disables all ranging measures
+        end
         rangingMeasures(isInternal) = 0;
         rangingMeasures(isBar) = barlength*1.4/1.7;       
         rangingMeasures(isnan(rangingMeasures)) = 0;

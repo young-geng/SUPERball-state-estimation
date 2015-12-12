@@ -10,9 +10,14 @@ totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
 lims = 2.5*barLength;
 
+global user_defined_nodes;
+user_defined_nodes = 0;
 %%% Need to turn off gravity for initial position and orientation finding 
 gravity = 0.0; 
-gravity = 0.1*9.81;             % m/s^2
+gravity = 9.81;             % m/s^2
+if user_defined_nodes > 0
+    %gravity = 9.81;             % m/s^2
+end
 %%% Need to turn off gravity for initial position and orientation finding 
 
 tspan =1/10;                % time between plot updates in seconds
@@ -34,6 +39,7 @@ global updateVel_all;
 global goodRestlengths_all;
 global hvid;
 global f;
+global nodes;
 
 %%% Calibrated %%%
 load('positions.mat');
@@ -106,6 +112,10 @@ nodes(:,3) = nodes(:,3) - min(nodes(:,3));
 nodes(:,2) = nodes(:,2) + 1.7 ;
 nodes(:,1) = nodes(:,1) + 1.7;
 
+if user_defined_nodes > 0
+    load('noGrav_nodes.mat');
+end
+
 bars = [1:2:11;
     2:2:12];
 strings = [1  2 3 4 5 6 7 8  9 11 12  10 1 1 11 11 10 10 3 3 7  7 6 6;
@@ -118,7 +128,7 @@ lengthMeasureIndices = [
     2*ones(1,1), 3*ones(1,2), 4*ones(1,3), 5*ones(1,4), 6*ones(1,5), ...
     7*ones(1,6), 8*ones(1,7), 9*ones(1,8), 10*ones(1,9),11*ones(1,10),12*ones(1,11)...
     13*ones(1,12), 14*ones(1,12), 15*ones(1,12), 16*ones(1,12), ...
-    18*ones(1,12), 19*ones(1,12), 20*ones(1,12), 21*ones(1,12);
+    17*ones(1,12), 18*ones(1,12), 19*ones(1,12), 20*ones(1,12);
     1, 1:2, 1:3, 1:4, 1:5, 1:6, 1:7, 1:8,  1:9,1:10,1:11, 1:12, 1:12, 1:12, 1:12, 1:12, 1:12, 1:12, 1:12]';
 
 lengthMeasureIndices([1 6 15 28 45 66],:) = []; %eliminate bar measures
@@ -300,13 +310,13 @@ ax1  = ax2;
 
 %%%% USE WITH REAL ROBOT %%%
 
-superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
-rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+%superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
+%rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%% USE WITH SIMULATED DATA FROM NTRT/GPS %%%
-%superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
-%rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
+rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 
