@@ -12,7 +12,7 @@ lims = 2.5*barLength;
 
 %%% Need to turn off gravity for initial position and orientation finding 
 gravity = 0.0; 
-%gravity = 9.81;             % m/s^2
+gravity = 9.81;             % m/s^2
 %%% Need to turn off gravity for initial position and orientation finding 
 
 tspan =1/10;                % time between plot updates in seconds
