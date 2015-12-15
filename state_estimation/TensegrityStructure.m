@@ -1,4 +1,4 @@
-classdef TensegrityStructure < handle
+classdef TensegrityStructure < matlab.mixin.Copyable
     properties
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%% User Set Values %%%%%%%%%%%%%%%%%%%%%%%%
@@ -340,7 +340,7 @@ classdef TensegrityStructure < handle
             %nAngle = sum(obj.goodAngles);
             nVector = sum(obj.goodVectors);
             Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.03^2*eye(nVector*3),0.03^2*eye(m-nVector*3)); %measurement noise covariance matrix
+            R_noise = blkdiag(0.03^2*eye(nVector*3),0.045^2*eye(m-nVector*3)); %measurement noise covariance matrix
             %if you reduce the IMU part of R_noise, then the filter becomes
             %unstable. 
             %R_noise = blkdiag(0.005^2*eye(nVector),0.029^2*eye(m-nVector)); %measurement noise covariance matrix
@@ -358,17 +358,34 @@ classdef TensegrityStructure < handle
             xyzNodes = X(1:end/2,:);
             xyzDots = X((1:end/2)+end/2,:);
             for i = 1:round(tspan/dt)                              % calculation loop
+                %i
+                %dt
                 k_1 = getAccels(xyzNodes,xyzDots);
+                %if  sum(sum((isnan(k_1))))>0
+                %    disp 'nan k_1'
+                %end
                 yDot1 = xyzDots+k_1*(1/3*dt);
                 k_2  = getAccels(xyzNodes+xyzDots*(1/3*dt), yDot1);
+                %if  sum(sum((isnan(k_2))))>0
+                %    disp 'nan k_2'
+                %end
                 yDot2 = xyzDots+(k_2 - (1/3)*k_1)*(dt);
                 k_3 = getAccels(xyzNodes+(yDot1-1/3*xyzDots)*dt,yDot2);
+                %if  sum(sum((isnan(k_3))))>0
+                %    disp 'nan k_3'
+                %end
                 yDot3 = xyzDots+(k_1 -k_2 + k_3)*dt;
                 k_4 = getAccels(xyzNodes+(xyzDots-yDot1+yDot2)*dt,yDot3);
+                %if  sum(sum((isnan(k_4))))>0
+                %    disp 'nan k_4'
+                %end
                 xyzNodes = xyzNodes + (dt/8)*(xyzDots+3*(yDot1+yDot2)+yDot3);  % main equation
                 xyzDots = xyzDots + (dt/8)*(k_1+3*(k_2+k_3)+k_4);  % main equation
                 xys = xyzNodes(:,ind12);
                 lastContact(staticNotApplied(:,Gindex)) = xys(staticNotApplied(:,Gindex));
+                %if  sum(sum((isnan(lastContact))))>0
+                %    disp 'nan lastContact'
+                %end
             end
             
             %%%%%%%%%%%%%% Unscented Transformation of Process %%%%%%%%%%%%
@@ -435,7 +452,15 @@ classdef TensegrityStructure < handle
 %             fprintf('\r\n')
             obj.P = P1 -K*P12';                         %covariance update
             obj.ySimUKF = reshape(x,[],3);
-            
+            for i=1:6
+                barl = norm(obj.ySimUKF(i*2-1,:)-obj.ySimUKF(i*2,1:3));
+                if abs(barl-1.67)>.1
+                    disp 'bar length is changing too much'
+                end
+            end
+            %if sum(sum((isnan(obj.P))))>0 || det(obj.P)<=0
+            %    disp 'determinant cov < 0'
+            %end
             function nodeXYZdoubleDot = getAccels(nodeXYZs,nodeXYZdots)
                 %friction model constants
                 Kp = 10000;  Kd = 2000;  muS = 0.64;  muD = 0.54; kk = 1000; kFP = 1000; kFD = 2000;
@@ -471,6 +496,9 @@ classdef TensegrityStructure < handle
                 nodeXYZdoubleDot = (nodalMemberForces+groundForces).*M -nodeXYZdots*0.3; %added damping term
                 nodeXYZdoubleDot(:,3:3:end) = nodeXYZdoubleDot(:,3:3:end) - grav;
                 nodeXYZdoubleDot(fN,:) = 0;
+                if sum(sum(isnan(nodeXYZdoubleDot)))>0 ||  sum(sum(isinf(nodeXYZdoubleDot)))>0
+                    disp 'inf/nan accelerations'
+                end
             end
         end
     end

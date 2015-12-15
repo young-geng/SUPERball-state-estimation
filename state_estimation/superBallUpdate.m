@@ -89,7 +89,7 @@ else if nargin == 1
         isBar = [1, 22, 39, 52, 61, 66];
         isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
         if user_defined_nodes == 0
-            rangingMeasures(:) = nan; %Disables all ranging measures
+            %rangingMeasures(:) = nan; %Disables all ranging measures
         end
         rangingMeasures(isInternal) = 0;
         rangingMeasures(isBar) = barlength*1.4/1.7;       
@@ -148,10 +148,18 @@ else if nargin == 1
         %vectorValues
         %goodLengths
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        
-        ukfUpdate(superBall,tspan);
+        %superBall2 = copy(superBall);
+        %try 
+            ukfUpdate(superBall,tspan);
+        %catch ME
+        %    disp 'Error in callback UKF update'
+        %    ME
+        %    superBall = superBall2;
+        %end
         superBallUKFPlot.nodePoints = superBall.ySimUKF(1:end/2,:);
         nodes = superBallUKFPlot.nodePoints;
+        global nodes_array
+        nodes_array = [nodes_array nodes];
         updatePlot(superBallUKFPlot);
         for j = 1: 12
             texth(j).Position = nodes(j,:) + [0 0 0.1];
