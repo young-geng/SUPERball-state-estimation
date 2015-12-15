@@ -94,6 +94,7 @@ else if nargin == 1
         rangingMeasures(isInternal) = 0;
         rangingMeasures(isBar) = barlength*1.4/1.7;       
         rangingMeasures(isnan(rangingMeasures)) = 0;
+        rangingMeasures(rangingMeasures>10) = 0; %hard limit on distances
         isNewMeasurement = rangingMeasures > 0;
         updateVel(isNewMeasurement) = (rangingMeasures(isNewMeasurement) - lastUpdatedRangingMeasures(isNewMeasurement))./(dtSinceLastGoodLength(isNewMeasurement)*tspan);
         isUpdatedMeasurement = isNewMeasurement & abs(updateVel) < 0.5;
@@ -144,6 +145,7 @@ else if nargin == 1
         goodVectorValues = reshape(vectorValues,[3,numel(vectorValues)/3]);
         goodVectorValues = goodVectorValues(:,logical(isGoodVector));
         goodVectorValues = reshape(goodVectorValues',[numel(goodVectorValues),1]);
+        
         superBall.measurementUKFInput = [goodVectorValues; goodLengths]; %UKF measures
         %vectorValues
         %goodLengths
