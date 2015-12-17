@@ -11,12 +11,12 @@ barSpacing = barLength/4;
 lims = 2.5*barLength;
 
 global user_defined_nodes;
-user_defined_nodes = 1;
+user_defined_nodes = 0;
 %%% Need to turn off gravity for initial position and orientation finding 
 gravity = 0.0; 
+gravity = 0.3*9.81;             % m/s^2
 if user_defined_nodes > 0
-    %gravity = 9.81;             % m/s^2
-    gravity = 0.5;
+    gravity = 0.3*9.81;             % m/s^2
 end
 %%% Need to turn off gravity for initial position and orientation finding 
 
