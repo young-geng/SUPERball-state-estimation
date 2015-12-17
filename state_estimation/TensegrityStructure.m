@@ -427,7 +427,7 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             Z1 = [barVectorX;
                 barVectorY;
                 barVectorZ;
-                lengthMeasures];
+                lengthMeasures];            
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]);
             z1 = Z1*Ws';                                %Weighted average of forward propagated measurements
             Z2 = Z1 - z1(:,ones(1,nUKF));               %Measuremnets with average subtracted

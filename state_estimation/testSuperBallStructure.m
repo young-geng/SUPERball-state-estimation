@@ -47,7 +47,7 @@ positions_and_nodes = [positions, double(fixed_nodes')];
 reordered_positions = sortrows(positions_and_nodes,4);
 baseStationPoints = reordered_positions(:,1:3);
 % TODO:Hack to get the world correct. Should automate this based on robot
-baseStationPoints(:,3:3) = (baseStationPoints(:,3:3)*-1)+1.75;
+baseStationPoints(:,3:3) = (baseStationPoints(:,3:3)*-1)+2.2;
 
 %%% OUTSIDE %%%
 % baseStationPoints = [
@@ -112,9 +112,9 @@ nodes(:,3) = nodes(:,3) - min(nodes(:,3));
 nodes(:,2) = nodes(:,2) + 1.7 ;
 nodes(:,1) = nodes(:,1) + 1.7;
 
-if user_defined_nodes > 0
-    load('noGrav_nodes.mat');
-end
+% if user_defined_nodes > 0
+%     load('noGrav_nodes.mat');
+% end
 
 bars = [1:2:11;
     2:2:12];
@@ -310,15 +310,16 @@ ax1  = ax2;
 
 %%%% USE WITH REAL ROBOT %%%
 
-superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
-rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+%superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
+%rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%% USE WITH SIMULATED DATA FROM NTRT/GPS %%%
-%superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
-%rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+%%%% USE WITH SIMULATED DATA FROM NTRT %%%
+superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
+rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+rosNodeMessageListener = rossubscriber('/node_positions','std_msgs/Float32MultiArray',@(src,msg) nodePositionsCallback(msg.Data));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
-
+lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosNodeMessageListener));
 
 

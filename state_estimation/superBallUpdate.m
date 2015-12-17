@@ -3,7 +3,7 @@ function superBallUpdate(superBall1,superBallUKFPlot1,tspan1,ax1,text1,barlength
 %   Detailed explanation goes here
 
 %create some persistent variables for objects and structs
-persistent superBall superBallUKFPlot tspan allMeasureIndices ax i texth barlength lines dtSinceLastGoodLength lastUpdatedRangingMeasures offsets lastUpdatedStringLengths
+persistent superBall superBallUKFPlot tspan allMeasureIndices ax i texth barlength lines dtSinceLastGoodLength lastUpdatedRangingMeasures offsets lastUpdatedStringLengths rosMatlabPublisher rosMsg
 global state;
 global updateVel_all;
 global goodRestlengths_all;
@@ -47,7 +47,10 @@ if nargin>1
     
     %offsets = [3.8*ones(48,1);3.8*ones(48,1)];
     state = superBall.ySimUKF(:);
-
+    
+    %%%% ROS Publisher of estimated state information %%%%%%%%%%
+    rosMatlabPublisher = rospublisher('/matlab_superball_state','std_msgs/Float32MultiArray');
+    rosMsg = rosmessage(rosMatlabPublisher);
 else if nargin == 1
         
         i = i+1;
@@ -152,6 +155,10 @@ else if nargin == 1
         goodVectorValues = reshape(goodVectorValues',[numel(goodVectorValues),1]);
         
         superBall.measurementUKFInput = [goodVectorValues; goodLengths]; %UKF measures
+%         global inputVector
+%         global inputLengths
+%         inputVector = [inputVector goodVectorValues];
+%         inputLengths = [inputLengths rangingMeasures];
         %vectorValues
         %goodLengths
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -165,8 +172,14 @@ else if nargin == 1
         %end
         superBallUKFPlot.nodePoints = superBall.ySimUKF(1:end/2,:);
         nodes = superBallUKFPlot.nodePoints;
-        global nodes_array
-        nodes_array = [nodes_array nodes];
+        global node_data
+        node_data = nodes;
+        
+        %%% Pusblish ROS message %%%
+        rosMsg.Data = [reshape(nodes,[numel(nodes),1]); motorPos];
+        send(rosMatlabPublisher,rosMsg);
+%         rosMsg.Data = ones((numel(nodes)+numel(motorPos)),1)*nan;
+        
         updatePlot(superBallUKFPlot);
         for j = 1: 12
             texth(j).Position = nodes(j,:) + [0 0 0.1];
