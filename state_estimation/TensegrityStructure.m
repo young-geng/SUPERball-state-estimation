@@ -340,7 +340,7 @@ classdef TensegrityStructure < handle
             %nAngle = sum(obj.goodAngles);
             nVector = sum(obj.goodVectors);
             Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.03^2*eye(nVector*3),0.03^2*eye(m-nVector*3)); %measurement noise covariance matrix
+            R_noise = blkdiag(0.03^2*eye(nVector*3),0.04^2*eye(m-nVector*3)); %measurement noise covariance matrix
             %if you reduce the IMU part of R_noise, then the filter becomes
             %unstable. 
             %R_noise = blkdiag(0.005^2*eye(nVector),0.029^2*eye(m-nVector)); %measurement noise covariance matrix
@@ -410,7 +410,7 @@ classdef TensegrityStructure < handle
             Z1 = [barVectorX;
                 barVectorY;
                 barVectorZ;
-                lengthMeasures];
+                lengthMeasures];            
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]);
             z1 = Z1*Ws';                                %Weighted average of forward propagated measurements
             Z2 = Z1 - z1(:,ones(1,nUKF));               %Measuremnets with average subtracted
