@@ -86,6 +86,7 @@ else if nargin == 1
 %         else
         rangingMeasures = msgData(1:end-(numEndcapVec+numMotorPos));
         updateVel = zeros(size(rangingMeasures));
+        updateDiff = zeros(size(rangingMeasures));
         isBar = [1, 22, 39, 52, 61, 66];
         isInternal = 1:(11+10+9+8+7+6+5+4+3+2+1);
         if user_defined_nodes == 0
@@ -94,14 +95,18 @@ else if nargin == 1
         rangingMeasures(isInternal) = 0;
         rangingMeasures(isBar) = barlength*1.4/1.7;       
         rangingMeasures(isnan(rangingMeasures)) = 0;
-        rangingMeasures(rangingMeasures>10) = 0; %hard limit on distances
+        rangingMeasures(rangingMeasures>25) = 0; %hard limit on distances
         isNewMeasurement = rangingMeasures > 0;
         updateVel(isNewMeasurement) = (rangingMeasures(isNewMeasurement) - lastUpdatedRangingMeasures(isNewMeasurement))./(dtSinceLastGoodLength(isNewMeasurement)*tspan);
+        updateDiff(isNewMeasurement) = (rangingMeasures(isNewMeasurement) - lastUpdatedRangingMeasures(isNewMeasurement));
         isUpdatedMeasurement = isNewMeasurement & abs(updateVel) < 0.5;
+        
         dtSinceLastGoodLength = dtSinceLastGoodLength + 1;
         dtSinceLastGoodLength(isUpdatedMeasurement) = 1; 
         lastUpdatedRangingMeasures(isUpdatedMeasurement) = rangingMeasures(isUpdatedMeasurement);
-%         end
+%       if distance between last valid and current valid > 10 meters, then
+%       update counters, but don't use measurement
+        isUpdatedMeasurement = isNewMeasurement & abs(updateVel) < 0.5 & abs(updateDiff)<10.;
                      
         allBarVectors = msgData((end-((numEndcapVec-1)+numMotorPos)): (end-numMotorPos)); % Grab all 12 end cap vectors
         
