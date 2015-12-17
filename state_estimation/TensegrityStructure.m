@@ -444,8 +444,8 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             
             x=x1+K*(z-z1);                              %state update
             n = norm(z-z1)
-            global norm_data
-            norm_data = [norm_data, n];
+            %global norm_data
+            %norm_data = [norm_data, n];
 %              fprintf('%7.2f', z(1:nAngle));
 %              fprintf('\r\n');
 %             fprintf('%7.2f', (z1(1:nAngle)))
