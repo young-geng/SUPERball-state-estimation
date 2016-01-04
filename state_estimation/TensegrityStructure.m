@@ -130,7 +130,7 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             if(grav == 0)
                 obj.groundHeight = -100;
             else
-                obj.groundHeight = 0;
+                obj.groundHeight = 0.175;
             end
             %%%%%%%%%%%%%%%%%%%%Dynamics Variables%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %these are quick vector lists of bars and strings inserted into simstruct
@@ -431,19 +431,19 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             % this is if you have xyz coord -> Z1 = reshape(yy,m,[]);
             z1 = Z1*Ws';                                %Weighted average of forward propagated measurements
             Z2 = Z1 - z1(:,ones(1,nUKF));               %Measuremnets with average subtracted
-            disp 'R noise'
+%             disp 'R noise'
             %size(R_noise)
             %size(Z2)
-            diag(R_noise)'
-            z'
-            z1'
+%             diag(R_noise)'
+%             z'
+%             z1'
             P2 = Z2*diag(Wc)*Z2'+R_noise;               %Measurement covariance
             P12=X2*diag(Wc)*Z2';                        %Transformed cross covariance matrix
             K=P12/P2;                                   %kalman gain
             %z'
             
             x=x1+K*(z-z1);                              %state update
-            n = norm(z-z1)
+            n = norm(z-z1);
             global norm_data
             norm_data = [norm_data, n];
 %              fprintf('%7.2f', z(1:nAngle));

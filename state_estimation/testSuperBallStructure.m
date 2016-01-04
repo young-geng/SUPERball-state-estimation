@@ -10,14 +10,10 @@ totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
 lims = 2.5*barLength;
 
-global user_defined_nodes;
-user_defined_nodes = 0;
 %%% Need to turn off gravity for initial position and orientation finding 
 gravity = 0.0; 
-gravity = 0.3*9.81;             % m/s^2
-if user_defined_nodes > 0
-    gravity = 0.3*9.81;             % m/s^2
-end
+gravity = 9.81;             % m/s^2
+
 %%% Need to turn off gravity for initial position and orientation finding 
 
 tspan =1/10;                % time between plot updates in seconds
@@ -114,6 +110,7 @@ nodes(:,1) = nodes(:,1) + 1.7;
 
 % if user_defined_nodes > 0
 %     load('noGrav_nodes.mat');
+%     nodes = node_data;
 % end
 
 bars = [1:2:11;
@@ -121,8 +118,8 @@ bars = [1:2:11;
 strings = [1  2 3 4 5 6 7 8  9 11 12  10 1 1 11 11 10 10 3 3 7  7 6 6;
            11 5 7 2 9 3 6 12 8 10 4   1 9 5  2  4  12  8 5 2 4 12 8 9];
 
-stringRestLength = [(1-(preTension/Ka))*ones(12,1)*norm(nodes(2,:)-nodes(5,:)); %active
-                                                              (1-(preTension/Kp))*ones(12,1)*norm(nodes(1,:)-nodes(9,:))]; %passive
+stringRestLength = [(1-(preTension/Kp))*ones(12,1)*norm(nodes(1,:)-nodes(9,:)); %passive
+                                                              (1-(preTension/Ka))*ones(12,1)*norm(nodes(2,:)-nodes(5,:))]; %active
 
 lengthMeasureIndices = [
     2*ones(1,1), 3*ones(1,2), 4*ones(1,3), 5*ones(1,4), 6*ones(1,5), ...
