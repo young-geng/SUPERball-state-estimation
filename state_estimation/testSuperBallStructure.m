@@ -115,8 +115,8 @@ nodes(:,1) = nodes(:,1) + 1.7;
 
 bars = [1:2:11;
     2:2:12];
-strings = [1  2 3 4 5 6 7 8  9 11 12  10 1 1 11 11 10 10 3 3 7  7 6 6;
-           11 5 7 2 9 3 6 12 8 10 4   1 9 5  2  4  12  8 5 2 4 12 8 9];
+strings = [1  2 3 4 5 6 7 8  9 10 11 12  1 1 11 11 10 10 3 3 7  7 6 6;
+           11 5 7 2 9 3 6 12 8 1  10 4   9 5 2  4  12 8  5 2 4 12 8 9];
 
 stringRestLength = [(1-(preTension/Kp))*ones(12,1)*norm(nodes(1,:)-nodes(9,:)); %passive
                                                               (1-(preTension/Ka))*ones(12,1)*norm(nodes(2,:)-nodes(5,:))]; %active

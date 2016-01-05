@@ -57,7 +57,7 @@ else if nargin == 1
         numMotorPos = 12;
         numEndcapVec = 12*3; %12 ends with xyz per bar
         msgData = superBall1;
-        motorPos = msgData(end - (numMotorPos-1) : end)
+        motorPos = msgData(end - (numMotorPos-1) : end);
         restLengths = superBall.stringInitRestLengths(1) -               abs(((0.009) *            (1000/109))*motorPos); % 1 - 2*r*pi
         %             0 radian length   drive Shaft Radius          dumb ros scaling 
         
