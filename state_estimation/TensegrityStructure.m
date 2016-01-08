@@ -413,10 +413,17 @@ classdef TensegrityStructure < matlab.mixin.Copyable
 %             barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
             
 %             xyzNodesOld = xyzNodes;
-            for i=1:3:length(xyzNodes)
-                xyzNodesAvg = repmat(mean(xyzNodes(:,i:i+2)), 12, 1);
-                xyzNodes(:,i:i+2) = (xyzNodes(:,i:i+2) - xyzNodesAvg)*(1.4/1.7) + xyzNodesAvg; %hack to estimate actual nodal coordinates instead of end cap positions
-            end
+
+%             THIS WAS EATING A LOT OF CPU POWER!!!
+%             for i=1:3:length(xyzNodes)
+%                 xyzNodesAvg = repmat(mean(xyzNodes(:,i:i+2)), 12, 1);
+%                 xyzNodes(:,i:i+2) = (xyzNodes(:,i:i+2) - xyzNodesAvg)*(1.4/1.7) + xyzNodesAvg; %hack to estimate actual nodal coordinates instead of end cap positions
+%             end
+            
+            %hack to estimate actual nodal coordinates instead of end cap positions
+            xyzNodesAvg = repmat(mean(xyzNodes), 12, 1);            
+            xyzNodes = (xyzNodes- xyzNodesAvg)*(1.4/1.7)+xyzNodesAvg;
+
 %             (xyzNodesOld - xyzNodes)
             
             yyPlusBase = [xyzNodes; repmat(obj.baseStationPoints,1,nUKF)];
@@ -443,21 +450,21 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             %z'
             
             x=x1+K*(z-z1);                              %state update
-            n = norm(z-z1);
-            global norm_data
-            norm_data = [norm_data, n];
+%             n = norm(z-z1);
+%             global norm_data
+%             norm_data = [norm_data, n];
 %              fprintf('%7.2f', z(1:nAngle));
 %              fprintf('\r\n');
 %             fprintf('%7.2f', (z1(1:nAngle)))
 %             fprintf('\r\n')
             obj.P = P1 -K*P12';                         %covariance update
             obj.ySimUKF = reshape(x,[],3);
-            for i=1:6
-                barl = norm(obj.ySimUKF(i*2-1,:)-obj.ySimUKF(i*2,1:3));
-                if abs(barl-1.67)>.1
-                    disp 'bar length is changing too much'
-                end
-            end
+%             for i=1:6
+%                 barl = norm(obj.ySimUKF(i*2-1,:)-obj.ySimUKF(i*2,1:3));
+%                 if abs(barl-1.67)>.1
+%                     disp 'bar length is changing too much'
+%                 end
+%             end
             %if sum(sum((isnan(obj.P))))>0 || det(obj.P)<=0
             %    disp 'determinant cov < 0'
             %end
@@ -483,9 +490,9 @@ classdef TensegrityStructure < matlab.mixin.Copyable
                 xyDotMag = sqrt(nodeXYZdots(:,ind1).^2 + nodeXYZdots(:,ind2).^2 );
                 xyDot = nodeXYZdots(:,ind12);
                 staticF = kFP*(lastContact - nodeXYZs(:,ind12)) - kFD*xyDot;
-                staticNotApplied = ((staticF(:,ind11).^2 +  staticF(:,ind22).^2) > (muS*normForces).^2)|notTouching;
+                staticNotApplied = notTouching|((staticF(:,ind11).^2 +  staticF(:,ind22).^2) > (muS*normForces).^2);
                 staticF(staticNotApplied(:,Gindex)) = 0;
-                w = (1 - exp(-kk*xyDotMag))./xyDotMag;
+                w =(1 - exp(-kk*xyDotMag))./xyDotMag;
                 w(xyDotMag<1e-9) = kk;
                 dynamicFmag =  - muD * normForces .*w ;
                 dynamicFmag(~staticNotApplied) = 0;
@@ -496,9 +503,9 @@ classdef TensegrityStructure < matlab.mixin.Copyable
                 nodeXYZdoubleDot = (nodalMemberForces+groundForces).*M -nodeXYZdots*0.3; %added damping term
                 nodeXYZdoubleDot(:,3:3:end) = nodeXYZdoubleDot(:,3:3:end) - grav;
                 nodeXYZdoubleDot(fN,:) = 0;
-                if sum(sum(isnan(nodeXYZdoubleDot)))>0 ||  sum(sum(isinf(nodeXYZdoubleDot)))>0
-                    disp 'inf/nan accelerations'
-                end
+%                 if sum(sum(isnan(nodeXYZdoubleDot)))>0 ||  sum(sum(isinf(nodeXYZdoubleDot)))>0
+%                     disp 'inf/nan accelerations'
+%                 end
             end
         end
     end

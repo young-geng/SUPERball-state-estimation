@@ -278,8 +278,8 @@ view(3)
 grid on
 light('Position',[0 0 10]);%,'Style','local')
 % lighting flat
-xlim([-lims lims])
-ylim([-lims lims])
+xlim([-lims lims]+1.9740)
+ylim([-lims lims]-2.8590)
 zlim(0.8*[-0.01 lims])
 title('UKF Output');
 xlabel('X')
@@ -307,14 +307,14 @@ ax1  = ax2;
 
 %%%% USE WITH REAL ROBOT %%%
 
-%superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
-%rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
+rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%% USE WITH SIMULATED DATA FROM NTRT %%%
-superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
-rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
-rosNodeMessageListener = rossubscriber('/node_positions','std_msgs/Float32MultiArray',@(src,msg) nodePositionsCallback(msg.Data));
+%superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
+%rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+%rosNodeMessageListener = rossubscriber('/node_positions','std_msgs/Float32MultiArray',@(src,msg) nodePositionsCallback(msg.Data));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosNodeMessageListener));
