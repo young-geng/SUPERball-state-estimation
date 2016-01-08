@@ -170,8 +170,8 @@ else if nargin == 1
         %end
         superBallUKFPlot.nodePoints = superBall.ySimUKF(1:end/2,:);
         nodes = superBallUKFPlot.nodePoints;
-        global node_data
-        node_data = [node_data nodes];
+        %global node_data
+        %node_data = [node_data nodes];
         
         %%% Pusblish ROS message %%%
         rosMsg.Data = [reshape(nodes,[numel(nodes),1]); restLengths];
@@ -259,11 +259,11 @@ else if nargin == 1
         
         state = [state superBall.ySimUKF(:)];
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        x_Avg = mean( superBallUKFPlot.nodePoints(:,1));
-        y_Avg = mean( superBallUKFPlot.nodePoints(:,2));
-        lims = 2.5*barlength;
-        xlim(ax(1),[-lims lims]+x_Avg);
-        ylim(ax(1),[-lims lims]+y_Avg);
+%         x_Avg = mean( superBallUKFPlot.nodePoints(:,1));
+%         y_Avg = mean( superBallUKFPlot.nodePoints(:,2));
+%         lims = 2.5*barlength;
+%         xlim(ax(1),[-lims lims]+x_Avg);
+%         ylim(ax(1),[-lims lims]+y_Avg);
         
         %%%%%%%%%%%% Try and make a movie %%%%%%%%%%%%%%%%%%%%%%
         % Desired frame resolution (see fig2frame). The video will automatically adopt the resolution of the first frame (see HELP VIDEOWRITER).
