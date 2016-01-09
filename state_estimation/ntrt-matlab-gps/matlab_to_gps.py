@@ -21,15 +21,15 @@ def state_cb(msg):
     for idx in xrange(6):
         state = SUPERballState()
 
-        state.pos2.x = node_pos[6*idx]
-        state.pos2.y = node_pos[6*idx + 1]
-        state.pos2.z = node_pos[6*idx + 2]
-        state.pos1.x = node_pos[6*idx + 3]
-        state.pos1.y = node_pos[6*idx + 4]
-        state.pos1.z = node_pos[6*idx + 5]
+        state.pos1.x = node_pos[6*idx]
+        state.pos1.y = node_pos[6*idx + 1]
+        state.pos1.z = node_pos[6*idx + 2]
+        state.pos2.x = node_pos[6*idx + 3]
+        state.pos2.y = node_pos[6*idx + 4]
+        state.pos2.z = node_pos[6*idx + 5]
 
-        state.motor_pos2.data = motor_pos[2*idx]
-        state.motor_pos1.data = motor_pos[2*idx + 1]
+        state.motor_pos1.data = motor_pos[2*idx]
+        state.motor_pos2.data = motor_pos[2*idx + 1]
 
         pubMsg.states.append(state)
     pub.publish(pubMsg)

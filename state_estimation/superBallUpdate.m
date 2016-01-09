@@ -58,7 +58,7 @@ else if nargin == 1
         numEndcapVec = 12*3; %12 ends with xyz per bar
         msgData = superBall1;
         motorPos = msgData(end - (numMotorPos-1) : end);
-        restLengths = superBall.stringInitRestLengths(1) -               abs(((0.009) *            (1000/109))*motorPos) % 1 - 2*r*pi
+        restLengths = superBall.stringInitRestLengths(1) -               abs(((0.009) *            (1000/109))*motorPos); % 1 - 2*r*pi
         %             0 radian length   drive Shaft Radius          dumb ros scaling 
         
         restLengths(isnan(restLengths)) = lastUpdatedStringLengths(isnan(restLengths));
@@ -169,12 +169,12 @@ else if nargin == 1
         %    superBall = superBall2;
         %end
         superBallUKFPlot.nodePoints = superBall.ySimUKF(1:end/2,:);
-        nodes = superBallUKFPlot.nodePoints;
+        nodes = superBallUKFPlot.nodePoints
         %global node_data
         %node_data = [node_data nodes];
         
         %%% Pusblish ROS message %%%
-        rosMsg.Data = [reshape(nodes,[numel(nodes),1]); restLengths];
+        rosMsg.Data = [reshape(nodes',[numel(nodes),1]); restLengths];
         send(rosMatlabPublisher,rosMsg);
 %         rosMsg.Data = ones((numel(nodes)+numel(motorPos)),1)*nan;
         

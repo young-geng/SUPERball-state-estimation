@@ -307,14 +307,14 @@ ax1  = ax2;
 
 %%%% USE WITH REAL ROBOT %%%
 
-superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
-rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+% superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
+% rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%% USE WITH SIMULATED DATA FROM NTRT %%%
-%superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
-%rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
-%rosNodeMessageListener = rossubscriber('/node_positions','std_msgs/Float32MultiArray',@(src,msg) nodePositionsCallback(msg.Data));
+superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
+rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+rosNodeMessageListener = rossubscriber('/node_positions','std_msgs/Float32MultiArray',@(src,msg) nodePositionsCallback(msg.Data));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosNodeMessageListener));
