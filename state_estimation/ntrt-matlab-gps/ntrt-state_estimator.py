@@ -16,7 +16,10 @@ rospy.init_node("sim_data_to_matlab")
 node_pos = np.zeros((12,3))
 motor_pos = np.zeros((12,1))
 all_data = np.zeros((210,1))
-noise_on = 1
+noise_on = 0
+
+# Node offset to move the robot around.
+node_offset = np.array([2.0, -2.0, 0.0])
 
 node_vec = np.ones((12,3))
 # Load base station positions from a mat file and sort them into acending order
@@ -68,8 +71,8 @@ rod_enable_ranging = [1,
 def state_cb(msg):
     for idx,m in enumerate(msg.states):
         if(rod_enable[idx]):
-            node_pos[2*idx] = [m.pos2.x, m.pos2.z, m.pos2.y]
-            node_pos[2*idx+1] = [m.pos1.x, m.pos1.z, m.pos1.y]
+            node_pos[2*idx] = [m.pos2.x, m.pos2.z, m.pos2.y] + node_offset
+            node_pos[2*idx+1] = [m.pos1.x, m.pos1.z, m.pos1.y] + node_offset
 
             motor_pos[2*idx] = (1 - m.motor_pos1.data) / 0.08257
             motor_pos[2*idx+1] = (1 - m.motor_pos2.data) / 0.08257
@@ -154,7 +157,8 @@ while(not rospy.is_shutdown()):
     pub_nodes.publish(msg)
 
     print 'Node:'
-    print motor_pos.reshape(-1,1) 
+    print node_pos
+    #print motor_pos.reshape(-1,1) 
     print 'Base:'
     print base_pos
     #print 'Dist Vector'

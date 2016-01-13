@@ -38,7 +38,7 @@ def state_cb(msg):
 sub = rospy.Subscriber('/matlab_superball_state', Float32MultiArray, state_cb)
 
 # Publisher init
-pub = rospy.Publisher('/superball/state_sim', SUPERballStateArray, queue_size=1)
+pub = rospy.Publisher('/superball/state', SUPERballStateArray, queue_size=1)
 
 r = rospy.Rate(100)
 while(not rospy.is_shutdown()):
