@@ -28,13 +28,6 @@ motor_pos = [0.0, #1
 
 # Setup ROS publishers for motor positions
 motor_pubs = []
-for i in range(12):
-    if i % 2 == 0:
-        bbb, board_id, sub_index = i + 2, 0x71, 0x2
-    else:
-        bbb, board_id, sub_index = i + 1, 0x1, 0x1
-    motor_pubs.append(rospy.Publisher('/bbb%d/0x%x_0x2040_0x%x' % (bbb, board_id, sub_index), \
-                           Float32, queue_size=1))
 
 time_pub = rospy.Publisher('/superball/timestep', UInt16, queue_size=1)
 

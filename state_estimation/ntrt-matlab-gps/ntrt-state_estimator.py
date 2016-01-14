@@ -71,8 +71,8 @@ rod_enable_ranging = [1,
 def state_cb(msg):
     for idx,m in enumerate(msg.states):
         if(rod_enable[idx]):
-            node_pos[2*idx] = [m.pos2.x, m.pos2.z, m.pos2.y] + node_offset
-            node_pos[2*idx+1] = [m.pos1.x, m.pos1.z, m.pos1.y] + node_offset
+            node_pos[2*idx] = [m.pos2.x, m.pos2.y, m.pos2.z] + node_offset
+            node_pos[2*idx+1] = [m.pos1.x, m.pos1.y, m.pos1.z] + node_offset
 
             motor_pos[2*idx] = (1 - m.motor_pos1.data) / 0.08257
             motor_pos[2*idx+1] = (1 - m.motor_pos2.data) / 0.08257
