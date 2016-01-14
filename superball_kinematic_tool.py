@@ -60,7 +60,7 @@ class KinematicMotorConstraints(object):
 				 'algorithm': 'composite',
 				 'iterations': 20,
 				 'target_precision': 1.0,
-				 'trees': 5}):
+				 'trees': 5},index_file=None):
 		print "Loading data"
 		self.l0_filtered_file = l0_filtered_file
 		#open file
@@ -68,9 +68,16 @@ class KinematicMotorConstraints(object):
 		#create FLANN index 
 		pyflann.set_distance_type(distance_type)
 		self.nn = pyflann.FLANN()
-		print "building FLANN index"
-		print self.nn.build_index(self.l0_data,**algo_options)
+		if(index_file is None):
+			print "building FLANN index"
+			print self.nn.build_index(self.l0_data,**algo_options)
+		else:
+			print "loading FLANN index from file"
+			self.nn.load_index(index_file,self.l0_data)
 
 	def find_nearest_valid_values(self,l0):
 		idx = self.nn.nn_index(l0.astype(np.float32))[0][0]
 		return self.l0_data[idx]
+
+	def save_index(self,fname):
+		self.nn.save_index(fname)		
