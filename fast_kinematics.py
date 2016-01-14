@@ -81,7 +81,7 @@ def estimate_forces_and_potential_energy(N,l0_string):
 
 
 class SUPERballKinematics(object):
-    def __init__(self,N0,C_passive,C_actuated,C_bar,k_passive,k_actuated,k_bar,l0_passive,l0_bar):
+    def __init__(self,N0,C_passive,C_actuated,C_bar,k_passive,k_actuated,k_bar,l0_passive,l0_bar,lhard_passive=0.279,lhard_actuated=0.060,spring_hard_limit=True):
         self.N0 = N0.ravel()
         self.C_passive = C_passive
         self.C_actuated = C_actuated
@@ -91,6 +91,9 @@ class SUPERballKinematics(object):
         self.k_bar = k_bar
         self.l0_passive = l0_passive
         self.l0_bar = l0_bar
+        self.lhard_passive = lhard_passive
+        self.lhard_actuated = lhard_actuated
+        self.spring_hard_limit = spring_hard_limit
 
         #variables
         self.N = T.vector() #output, reshape to 12,3
@@ -102,13 +105,31 @@ class SUPERballKinematics(object):
         self.L_actuated = T.sqrt(T.sum(T.dot(self.C_actuated,self.N_m)**2,1)) #string length actuated cables
         self.L_bar = T.sqrt(T.sum(T.dot(self.C_bar,self.N_m)**2,1)) #bar lengths
 
-        self.F_passive = self.k_passive*T.maximum(0,self.L_passive-self.l0_passive) #string forces actuated cables
-        self.F_actuated = self.k_actuated*T.maximum(0,self.L_actuated-self.l0_actuated) #string forces actuated cables
+        if (not self.spring_hard_limit):
+            self.F_passive = self.k_passive*T.maximum(0,self.L_passive-self.l0_passive) #string forces actuated cables
+            self.F_actuated = self.k_actuated*T.maximum(0,self.L_actuated-self.l0_actuated) #string forces actuated cables
+        else:
+            _l0 = T.maximum(0,self.L_passive-self.l0_passive)
+            _l1 = T.maximum(0,self.L_passive-self.l0_passive-self.lhard_passive)
+            self.F_passive = self.k_passive*(_l0 + T.exp(_l1)-1)
+            _l0 = T.maximum(0,self.L_actuated-self.l0_actuated)
+            _l1 = T.maximum(0,self.L_actuated-self.l0_actuated-self.lhard_actuated)
+            self.F_actuated = self.k_actuated*(_l0 + T.exp(_l1)-1)
         self.F_bar = self.k_bar*T.maximum(0,self.L_bar-self.l0_bar) #bar forces
 
         #potential energy functions
-        self.U_passive = 0.5*self.k_passive*T.maximum(0,self.L_passive-self.l0_passive)**2
-        self.U_actuated = 0.5*self.k_actuated*T.maximum(0,self.L_actuated-self.l0_actuated)**2
+        if (not self.spring_hard_limit):
+            self.U_passive = 0.5*self.k_passive*T.maximum(0,self.L_passive-self.l0_passive)**2
+            self.U_actuated = 0.5*self.k_actuated*T.maximum(0,self.L_actuated-self.l0_actuated)**2
+        else:
+            _l0 = T.maximum(0,self.L_passive-self.l0_passive)
+            _l1 = T.maximum(0,self.L_passive-self.l0_passive-self.lhard_passive)
+            self.U_passive = 0.5*self.k_passive*_l0**2 + self.k_passive*(T.exp(_l1)-_l1-1)
+            _l0 = T.maximum(0,self.L_actuated-self.l0_actuated)
+            _l1 = T.maximum(0,self.L_actuated-self.l0_actuated-self.lhard_actuated)
+            self.U_actuated = 0.5*self.k_actuated*_l0**2 + self.k_actuated*(T.exp(_l1)-_l1-1)
+
+
         self.U_bar = 0.5*self.k_bar*(self.L_bar-self.l0_bar)**2 #potential energy per bar
         self.U = T.sum(self.U_passive)+T.sum(self.U_actuated)+T.sum(self.U_bar) #total potential energy
         self.dU_N = T.grad(self.U,self.N)
@@ -140,22 +161,19 @@ superball = SUPERballKinematics(nodes,
                             3150, #actuated stiffness
                             100000,#bar stiffness
                             .99, #passive l0
-                            1.67) #bar length
+                            1.67,spring_hard_limit=True) #bar length
 #inputs should be between 0.5m and 95m
-def run_algorithm(iterations):
-    l0 = np.random.random((iterations,12))*0.45+0.5
+def run_algorithm(iterations,l0=None):
+    #iterations is ignored if l0 is not None
+    if (l0 is None):
+        l0 = np.random.random((iterations,12))*0.45+0.5
     result = map(superball.find_equilibrium,l0)
     return l0,result
 
-def run_algorithm_save(iterations,prefix=""):
-    l0,result = run_algorithm(iterations)
-    date_string = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime())
-    fname = "%s%s.pkl"%(prefix,date_string)
-    with open(fname,'wb') as f:
-        pickle.dump({'l0':l0,'result':result},f)
-
-def run_algorithm_save(iterations,path=""):
-    l0,result = run_algorithm(iterations)
+def run_algorithm_save(iterations,path="",l0=None):
+    #iterations is ignored if l0 is not None
+    l0,result = run_algorithm(iterations,l0)
+    iterations = l0.shape[0]
     #extract results into arrays
     F = np.zeros((iterations,12),dtype=np.float32)
     U = np.zeros(iterations,dtype=np.float32)
