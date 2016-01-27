@@ -16,7 +16,7 @@ rospy.init_node("sim_data_to_matlab")
 node_pos = np.zeros((12,3))
 motor_pos = np.zeros((12,1))
 all_data = np.zeros((210,1))
-noise_on = 0
+noise_on = 1
 
 # Node offset to move the robot around.
 node_offset = np.array([2.0, -2.0, 0.0])
@@ -94,15 +94,15 @@ temp_node_pos = np.zeros((12,3))
 temp_base_pos = np.zeros((8,3))
 
 # Noise Parameters
-ranging_mu = 0
-ranging_std = 0.2
+ranging_mu = 0.05
+ranging_std = 0.09
 vec_mu = 0
 vec_std = 0.2
 
 # Do not set to > 1
 ranging_percent_success = 0.1
-vec_percent_success = 0.90
-
+vec_percent_success = 0.95
+# Percent Dropped
 rpd = ranging_percent_success / 0.684 
 vpd = vec_percent_success / 0.684
 

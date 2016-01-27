@@ -215,8 +215,8 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             %friction model constants
             Kp = 20000;
             Kd = 5000;
-            muS = 0.64;
-            muD = 0.54;
+            muS = 0.85;%0.64;
+            muD = 0.7;%0.54;
             kk = 1000;
             kFP = 20000;
             kFD = 5000;
@@ -340,7 +340,8 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             %nAngle = sum(obj.goodAngles);
             nVector = sum(obj.goodVectors);
             Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.03^2*eye(nVector*3),0.045^2*eye(m-nVector*3)); %measurement noise covariance matrix
+            R_noise = blkdiag(0.045^2*eye(nVector*3),0.03^2*eye(m-nVector*3)); %measurement noise covariance matrix
+%             R_noise = blkdiag(0.03^2*eye(nVector*3),0.045^2*eye(m-nVector*3)); %measurement noise covariance matrix
             %if you reduce the IMU part of R_noise, then the filter becomes
             %unstable. 
             %R_noise = blkdiag(0.005^2*eye(nVector),0.029^2*eye(m-nVector)); %measurement noise covariance matrix
