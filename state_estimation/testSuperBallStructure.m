@@ -5,7 +5,7 @@ close all
 
 set(0,'DefaultFigureWindowStyle','normal')
 
-barLength = 1.67;
+barLength = 1.75;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
 lims = 2.5*barLength;
