@@ -8,6 +8,7 @@ import roslib; roslib.load_manifest('gps_agent_pkg')
 import rospy
 from gps_agent_pkg.msg import SUPERballState, SUPERballStateArray
 from std_msgs.msg import Float32MultiArray, Float32, UInt16
+from superball_msg.msg import TimestampedFloat32
 
 # ROS node
 rospy.init_node("manual_motor")
@@ -34,13 +35,13 @@ for i in range(12):
     else:
         bbb, board_id, sub_index = i + 1, 0x1, 0x1
     motor_pubs.append(rospy.Publisher('/bbb%d/0x%x_0x2040_0x%x' % (bbb, board_id, sub_index), \
-                           Float32, queue_size=1))
+                           TimestampedFloat32, queue_size=1))
 
 time_pub = rospy.Publisher('/superball/timestep', UInt16, queue_size=1)
 
 # Testing single motor movements
 motor_move = [8,12,4,2,5,9] 
-move_amount = 0.28
+move_amount = 48
 count = 1
 index = 2
 lastIndex = 5
@@ -63,7 +64,7 @@ while(not rospy.is_shutdown()):
 
     # Controls motor contraction velocity (pulling in)
     if(move < move_amount):
-         move = move + ((0.26 * motor_power) / (1000/rate))
+         move = move + ((26 * motor_power) / (1000/rate))
     else:
         move = move_amount    
 
@@ -71,15 +72,20 @@ while(not rospy.is_shutdown()):
     if(out <= 0):
         out = 0
     else:
-        out = out - ((0.26 * motor_power) / (1000/rate))
+        out = out - ((26 * motor_power) / (1000/rate))
 
     for idx in range(12):
+        msg = TimestampedFloat32()
+        msg.header.stamp = rospy.rostime.get_rostime()
         if(idx == (motor_move[index]-1)):
-            motor_pubs[idx].publish(motor_pos[idx] - move)
+            msg.data = motor_pos[idx] - move
+            motor_pubs[idx].publish(msg)
         elif(idx == (motor_move[lastIndex]-1)):
-            motor_pubs[idx].publish(motor_pos[idx] - out)
+            msg.data = motor_pos[idx] - out
+            motor_pubs[idx].publish(msg)
         else:
-            motor_pubs[idx].publish(motor_pos[idx])
+            msg.data = motor_pos[idx]
+            motor_pubs[idx].publish(msg)
     print motor_pubs[motor_move[index]-1].name
     print motor_pubs[motor_move[lastIndex]-1].name
     time_pub.publish(rate)

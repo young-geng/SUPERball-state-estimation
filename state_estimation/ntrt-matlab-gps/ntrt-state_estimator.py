@@ -16,7 +16,7 @@ rospy.init_node("sim_data_to_matlab")
 node_pos = np.zeros((12,3))
 motor_pos = np.zeros((12,1))
 all_data = np.zeros((210,1))
-noise_on = 0
+noise_on = 1
 
 # Node offset to move the robot around.
 node_offset = np.array([2.0, -2.0, 0.0])
@@ -74,8 +74,8 @@ def state_cb(msg):
             node_pos[2*idx] = [m.pos1.x, m.pos1.y, m.pos1.z] + node_offset
             node_pos[2*idx+1] = [m.pos2.x, m.pos2.y, m.pos2.z] + node_offset
 
-            motor_pos[2*idx] = (1 - m.motor_pos1.data) / 0.08257
-            motor_pos[2*idx+1] = (1 - m.motor_pos2.data) / 0.08257
+            motor_pos[2*idx] = (1 - m.motor_pos1.data) / 0.009 #old conversion 0.08257
+            motor_pos[2*idx+1] = (1 - m.motor_pos2.data) / 0.009 #old conversion 0.08257
         else:
             node_pos[2*idx] = [np.nan, np.nan, np.nan]
             node_pos[2*idx+1] = [np.nan, np.nan, np.nan]
@@ -94,15 +94,15 @@ temp_node_pos = np.zeros((12,3))
 temp_base_pos = np.zeros((8,3))
 
 # Noise Parameters
-ranging_mu = 0
-ranging_std = 0.2
+ranging_mu = 0.05
+ranging_std = 0.08
 vec_mu = 0
-vec_std = 0.2
+vec_std = 0.1
 
 # Do not set to > 1
-ranging_percent_success = 0.1
-vec_percent_success = 0.90
-
+ranging_percent_success = 0.10
+vec_percent_success = 0.95
+# Percent Dropped
 rpd = ranging_percent_success / 0.684 
 vpd = vec_percent_success / 0.684
 

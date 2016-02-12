@@ -5,7 +5,7 @@ close all
 
 set(0,'DefaultFigureWindowStyle','normal')
 
-barLength = 1.67;
+barLength = 1.75;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
 lims = 2.5*barLength;
@@ -23,8 +23,8 @@ Kp = 998;                   %passive string stiffness in Newtons/meter
 Ka = 3150;                  %active string stiffness in Newtons/meter
 preTension = 100;                   % how much force to apply to each cable in Newtons
 nodalMass = (totalSUPERballMass/12)*ones(12,1);
-Cp = 70;                    % damping constant, too lazy to figure out units.
-Ca = 70;                    % constant for passive and active springs
+Cp = 100;                    % damping constant, too lazy to figure out units.
+Ca = 100;                    % constant for passive and active springs
 barDamping = Cp/100*ones(6,1);
 F = zeros(12,3);
 stringStiffness = [Ka*ones(12,1); Kp*ones(12,1)];   % First set of 12 are acuated springs, second are passive
