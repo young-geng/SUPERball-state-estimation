@@ -8,11 +8,11 @@ set(0,'DefaultFigureWindowStyle','normal')
 barLength = 1.75;
 totalSUPERballMass = 21;    % kg
 barSpacing = barLength/4;
-lims = 2.5*barLength;
+lims = 4.5*barLength;
 
 %%% Need to turn off gravity for initial position and orientation finding 
 gravity = 0.0; 
-gravity = 9.81;             % m/s^2
+gravity = 9.;             % m/s^2
 
 %%% Need to turn off gravity for initial position and orientation finding 
 
@@ -38,12 +38,19 @@ global f;
 global nodes;
 
 %%% Calibrated %%%
-load('positions.mat');
+% load('positions.mat');
+% positions_and_nodes = [positions, double(fixed_nodes')];
+% reordered_positions = sortrows(positions_and_nodes,4);
+% baseStationPoints = reordered_positions(:,1:3);
+% % TODO:Hack to get the world correct. Should automate this based on robot
+% baseStationPoints(:,3:3) = (baseStationPoints(:,3:3)*-1)+2.2;
+
+%%% Calibrated Building 45 %%%
+load('build45/20160210_400_aligned_positions_base_given.mat')
 positions_and_nodes = [positions, double(fixed_nodes')];
 reordered_positions = sortrows(positions_and_nodes,4);
 baseStationPoints = reordered_positions(:,1:3);
-% TODO:Hack to get the world correct. Should automate this based on robot
-baseStationPoints(:,3:3) = (baseStationPoints(:,3:3)*-1)+2.2;
+baseStationPoints(:,3:3) = (baseStationPoints(:,3:3))+1.92;
 
 %%% OUTSIDE %%%
 % baseStationPoints = [
@@ -66,6 +73,17 @@ baseStationPoints(:,3:3) = (baseStationPoints(:,3:3)*-1)+2.2;
 %     -0.5000    0.5000    0.3500; %18
 %     -0.5000   -0.5000    0.3500; %19
 %      0.5000    0.5000    0.3500];%20
+
+ %%% BUILDING 45 %%%
+% baseStationPoints = [
+%      4.0200    15.380    2.1100; %13
+%      3.8700    4.7700    3.4000; %14
+%      4.8800    11.090    4.7000; %15 
+%      8.8300    6.5200    0.9200; %16
+%      1.0600    11.270    0.8900; %17
+%      1.0400    6.6900    0.9000; %18
+%      8.8300    11.460    0.9000; %19
+%      3.9400    1.5000    1.5800];%20
 labels = {'1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'};
 
 
@@ -85,11 +103,11 @@ nodes = [
     ];
 
 %random initial orientation of the robot?
-[random_rotation,~] = qr(randn(3));
-nodes = nodes*random_rotation;
+% [random_rotation,~] = qr(randn(3));
+% nodes = nodes*random_rotation;
 
-HH  = makehgtform('axisrotate',[0 0 1],0.8);
-HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
+% HH  = makehgtform('axisrotate',[0 0 1],0.8);
+% HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
 %%%%%% This rotate the robot to face 3-6-7 %%%%%%%%%%%
 %%%%%% Used in the local/external video tests %%%%%%%%
 % HH  = makehgtform('axisrotate',[0 1 0],3.14);
@@ -99,9 +117,9 @@ HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
 
 %%%%%% This rotate the robot to face 6-8-9 %%%%%%%%%%%
 %%%%%% Used in the flop tests %%%%%%%%%%%%%%%%%%%%%%%%
-% HH  = makehgtform('axisrotate',[0 1 0],-0.6);
-% HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
-% HH  = makehgtform('axisrotate',[0 0 1],1.7)*HH;
+HH  = makehgtform('axisrotate',[0 1 0],-0.6);
+HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
+HH  = makehgtform('axisrotate',[0 0 1],1.7)*HH;
 
 nodes = (HH(1:3,1:3)*nodes')';
 nodes(:,3) = nodes(:,3) - min(nodes(:,3));
@@ -151,20 +169,41 @@ generatePlot(superBallDynamicsPlot,ax2);
 updatePlot(superBallDynamicsPlot);
 scatter3(baseStationPoints(:,1),baseStationPoints(:,2),baseStationPoints(:,3),'fill','m');
 
-%%%%%% Run for video %%%%%%%%%%%%%%%%%%%%
+%%%%% Building 45 run %%%%%%%%%%%%%%%%%%
 groundTruthLines_test3 = [
+    [0,0,0]; % origin
+
     % Init Position
-    [1.09   1.60    0]; % 9
-    [1.80	0.92	0]; % 6
-    [2.09	1.86	0]; % 8
+    [0.38	0.52	0]; % 9
+    [-0.48   0.00    0]; % 6
+    [0.37	-0.50	0]; % 8
     % Flop 1
-    [2.16	1.96	0]; % 8'
-    [3.29	1.90	0]; % 10
-    [2.71	1.07	0]; % 12
+    [0.37	-0.59	0]; % 8'
+    [0.40  -1.69	0]; % 10
+    [-0.6	-0.95	0]; % 12
     % Flop 2
-    [(2.77-0.265)	(1.14-0.00)    0]; % 12'
-    [(3.58-0.465)   (0.43-0.15)    0]; % 7
-    [(3.80-0.265)   (1.40-0.22)    0]; % 4
+    [-0.49	-0.79    0]; % 12'
+    [-1.50  -1.06    0]; % 7
+    [-0.68  -1.75    0]; % 4
+    
+
+%%%%%% Run for video %%%%%%%%%%%%%%%%%%%%
+% groundTruthLines_test3 = [
+%     [0,0,0]; % origin
+
+%     % Init Position
+%     [1.09   1.60    0]; % 9
+%     [1.80	0.92	0]; % 6
+%     [2.09	1.86	0]; % 8
+%     % Flop 1
+%     [2.16	1.96	0]; % 8'
+%     [3.29	1.90	0]; % 10
+%     [2.71	1.07	0]; % 12
+%     % Flop 2
+%     [(2.77-0.265)	(1.14-0.00)    0]; % 12'
+%     [(3.58-0.465)   (0.43-0.15)    0]; % 7
+%     [(3.80-0.265)   (1.40-0.22)    0]; % 4
+    
 %     % Flop 3
 %     [3.90   1.46    0]; % 4'
 %     [4.93   1.20    0]; % 11
@@ -193,7 +232,12 @@ groundTruthLines_test3 = [
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
 ];
-groundTruthLables_test3 = {'9' '6' '8' '' '10' '12' '' '7' '4'};% '4' '11' '2'};
+
+HH = makehgtform('zrotate',deg2rad(-68));
+remapedGroundTruth = (HH(1:3,1:3)*groundTruthLines_test3');
+groundTruthLines_test3 = remapedGroundTruth';
+
+groundTruthLables_test3 = {'origin' '9' '6' '8' '' '10' '12' '' '7' '4'};% '4' '11' '2'};
 
 scatter3(groundTruthLines_test3(:,1),groundTruthLines_test3(:,2),groundTruthLines_test3(:,3),'fill','o');
 
@@ -278,8 +322,8 @@ view(3)
 grid on
 light('Position',[0 0 10]);%,'Style','local')
 % lighting flat
-xlim([-lims lims]+1.9740)
-ylim([-lims lims]-2.8590)
+xlim([-lims lims]-2.2)
+ylim([-lims lims]-0.0)
 zlim(0.8*[-0.01 lims])
 title('UKF Output');
 xlabel('X')
@@ -307,14 +351,14 @@ ax1  = ax2;
 
 %%%% USE WITH REAL ROBOT %%%
 
-% superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
-% rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
+rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%% USE WITH SIMULATED DATA FROM NTRT %%%
-superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
-rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
-rosNodeMessageListener = rossubscriber('/node_positions','std_msgs/Float32MultiArray',@(src,msg) nodePositionsCallback(msg.Data));
+% superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
+% rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+% rosNodeMessageListener = rossubscriber('/node_positions','std_msgs/Float32MultiArray',@(src,msg) nodePositionsCallback(msg.Data));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosNodeMessageListener));

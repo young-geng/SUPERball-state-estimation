@@ -32,7 +32,8 @@ if nargin>1
     
     lastUpdatedStringLengths = restLengths1;
     
-    load('offsets.mat');
+%     load('offsets.mat');
+    load('build45/20160210_250_offsets_base_given.mat');
     offsets_raw = offsets;%[reshape(offsets',96,1)];
     if sim == 0
         offsets = zeros(size(externalMeasureIndices,2),1)+3.8;
@@ -58,7 +59,7 @@ else if nargin == 1
         numEndcapVec = 12*3; %12 ends with xyz per bar
         msgData = superBall1;
         motorPos = msgData(end - (numMotorPos-1) : end);
-        restLengths = superBall.stringInitRestLengths(1) -               abs((0.009)*motorPos); % 1 - 2*r*pi
+        restLengths = superBall.stringInitRestLengths(1) -               abs((0.009)*motorPos) + (0.009*7.5); % 1 - 2*r*pi
         %             0 radian length   drive Shaft Radius          dumb ros scaling 
         
         restLengths(isnan(restLengths)) = lastUpdatedStringLengths(isnan(restLengths));
@@ -170,8 +171,8 @@ else if nargin == 1
         %end
         superBallUKFPlot.nodePoints = superBall.ySimUKF(1:end/2,:);
         nodes = superBallUKFPlot.nodePoints
-        %global node_data
-        %node_data = [node_data nodes];
+        global node_data
+        node_data = [node_data nodes];
         
         %%% Pusblish ROS message %%%
         rosMsg.Data = [reshape(nodes',[numel(nodes),1]); restLengths];
