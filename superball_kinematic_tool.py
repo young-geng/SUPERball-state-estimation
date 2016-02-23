@@ -7,14 +7,18 @@ class KinematicDataProcessing(object):
 	def __init__(self):
 		self.l0_files = []
 		self.F_files = []
+		self.N_files = []
 		self.l0_datasets = []
 		self.F_datasets = []
+		self.COM_datasets = []
 
-	def add_data(self,l0_file,F_file):
+
+	def add_data(self,l0_file,F_file,N_file):
 		print l0_file
 		#print F_file
 		self.l0_files.append(l0_file)
 		self.F_files.append(F_file)
+		self.N_files.append(N_file)
 
 	def add_data_directory(self,path):
 		#find all files starting with l0
@@ -22,12 +26,14 @@ class KinematicDataProcessing(object):
 		for l0_file in l0_files:
 			#find matching F_file
 			F_file = "Fstring%s"%(l0_file[2:])
-			self.add_data("%s/%s"%(path,l0_file),"%s/%s"%(path,F_file))
+			N_file = "N%s"%(l0_file[2:])
+			self.add_data("%s/%s"%(path,l0_file),"%s/%s"%(path,F_file),"%s/%s"%(path,N_file))
 
 	def filter_data(self,F_filter=lambda x: np.where(x.max(1)<250)[0]):
 		#load files and filter out data matching the given filter
 		self.l0_datasets = []
 		self.F_datasets = []
+		self.COM_datasets = []
 		for idx,l0_file in enumerate(self.l0_files):
 			#open data file
 			F_file = self.F_files[idx]
@@ -43,6 +49,11 @@ class KinematicDataProcessing(object):
 				valid_indices.shape[0],
 				l0_data.shape[0],
 				np.sum([o.shape[0] for o in self.l0_datasets])) 
+			#estimate COM
+			N_file = self.N_files[idx]
+			N_data = np.load(N_file)
+			
+
 
 
 	def save_dataset(self,output_prefix):
