@@ -46,7 +46,7 @@ if nargin>1
         offsets = zeros(size(externalMeasureIndices,2),1);
     end
     
-    %offsets = [3.8*ones(48,1);3.8*ones(48,1)];
+%     offsets = [3.8*ones(48,1);3.8*ones(48,1)];
     state = superBall.ySimUKF(:);
     
     %%%% ROS Publisher of estimated state information %%%%%%%%%%
@@ -98,11 +98,15 @@ else if nargin == 1
         rangingMeasures(isBar) = barlength*1.4/1.7;       
         rangingMeasures(isnan(rangingMeasures)) = 0;
         rangingMeasures(rangingMeasures>25) = 0; %hard limit on distances
+        %%%% remove nodes 15,16,17,20 %%%%
+%         removeBaseStation = [3:8:(8*12) 4:8:(8*12) 5:8:(8*12) 8:8:(8*12)] + 66;
+%         rangingMeasures(removeBaseStation) = 0;
+        
         isNewMeasurement = rangingMeasures > 0;
         updateVel(isNewMeasurement) = (rangingMeasures(isNewMeasurement) - lastUpdatedRangingMeasures(isNewMeasurement))./(dtSinceLastGoodLength(isNewMeasurement)*tspan);
         updateDiff(isNewMeasurement) = (rangingMeasures(isNewMeasurement) - lastUpdatedRangingMeasures(isNewMeasurement));
         isUpdatedMeasurement = isNewMeasurement & abs(updateVel) < 0.5;
-        
+               
         dtSinceLastGoodLength = dtSinceLastGoodLength + 1;
         dtSinceLastGoodLength(isUpdatedMeasurement) = 1; 
         lastUpdatedRangingMeasures(isUpdatedMeasurement) = rangingMeasures(isUpdatedMeasurement);
@@ -111,7 +115,7 @@ else if nargin == 1
         isUpdatedMeasurement = isNewMeasurement & abs(updateVel) < 0.5 & abs(updateDiff)<10.;
                      
         allBarVectors = msgData((end-((numEndcapVec-1)+numMotorPos)): (end-numMotorPos)); % Grab all 12 end cap vectors
-        
+%         allBarVectors = allBarVectors*nan;
         %allBarVectors(4:end) = nan;
         isGoodVectorValue = ~isnan(allBarVectors); 
         %allVectorValues = allBarVectors(isGoodVectorValue); % remove any nans

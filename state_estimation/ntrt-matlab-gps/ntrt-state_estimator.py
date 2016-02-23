@@ -23,10 +23,12 @@ node_offset = np.array([2.0, -2.0, 0.0])
 
 node_vec = np.ones((12,3))
 # Load base station positions from a mat file and sort them into acending order
-base_mat = scipy.io.loadmat('positions.mat')
+#base_mat = scipy.io.loadmat('positions.mat')
+base_mat = scipy.io.loadmat('/home/super/Projects/code/SUPERball-state-estimation/state_estimation/build45/20160210_400_aligned_positions_base_given.mat')
 base_pos_order = np.hstack((base_mat.values()[0],base_mat.values()[2].T))
 base_pos = base_pos_order[base_pos_order[:,3].argsort()][:,0:3]
-base_pos[:,2] = base_pos[:,2]*-1 + 2.2
+base_pos[:,2] = base_pos[:,2] + 1.92 
+#base_pos[:,2] = base_pos[:,2]*-1 + 2.2
 #base_pos[6:7] = np.ones((1,3))*np.nan
 
 #base_pos = np.array([[1, 1, 1],

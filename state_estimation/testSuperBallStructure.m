@@ -52,6 +52,7 @@ reordered_positions = sortrows(positions_and_nodes,4);
 baseStationPoints = reordered_positions(:,1:3);
 baseStationPoints(:,3:3) = (baseStationPoints(:,3:3))+1.92;
 
+
 %%% OUTSIDE %%%
 % baseStationPoints = [
 %      3.1500    11.160    0.5000; %13
@@ -110,16 +111,16 @@ nodes = [
 % HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
 %%%%%% This rotate the robot to face 3-6-7 %%%%%%%%%%%
 %%%%%% Used in the local/external video tests %%%%%%%%
-% HH  = makehgtform('axisrotate',[0 1 0],3.14);
-% HH  = makehgtform('axisrotate',[0 1 0],0.7)*HH;
-% HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
-% HH  = makehgtform('axisrotate',[0 0 1],-1.6)*HH;
+HH  = makehgtform('axisrotate',[0 1 0],3.14);
+HH  = makehgtform('axisrotate',[0 1 0],0.7)*HH;
+HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
+HH  = makehgtform('axisrotate',[0 0 1],-1.6)*HH;
 
 %%%%%% This rotate the robot to face 6-8-9 %%%%%%%%%%%
 %%%%%% Used in the flop tests %%%%%%%%%%%%%%%%%%%%%%%%
-HH  = makehgtform('axisrotate',[0 1 0],-0.6);
-HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
-HH  = makehgtform('axisrotate',[0 0 1],1.7)*HH;
+% HH  = makehgtform('axisrotate',[0 1 0],-0.6);
+% HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
+% HH  = makehgtform('axisrotate',[0 0 1],1.7)*HH;
 
 nodes = (HH(1:3,1:3)*nodes')';
 nodes(:,3) = nodes(:,3) - min(nodes(:,3));
