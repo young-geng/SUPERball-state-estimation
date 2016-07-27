@@ -6,13 +6,14 @@ close all
 set(0,'DefaultFigureWindowStyle','normal')
 
 barLength = 1.75;
-totalSUPERballMass = 21;    % kg
+%totalSUPERballMass = 28;    % kg
+totalSUPERballMass = 25;    % kg
 barSpacing = barLength/4;
 lims = 4.5*barLength;
 
 %%% Need to turn off gravity for initial position and orientation finding 
 gravity = 0.0; 
-gravity = 9.;             % m/s^2
+gravity = 9.8;             % m/s^2
 
 %%% Need to turn off gravity for initial position and orientation finding 
 
@@ -21,7 +22,7 @@ delT = 0.001;               % timestep for dynamic sim in seconds
 delTUKF  = 0.005;
 Kp = 998;                   %passive string stiffness in Newtons/meter
 Ka = 3150;                  %active string stiffness in Newtons/meter
-preTension = 100;                   % how much force to apply to each cable in Newtons
+preTension = 80;                   % how much force to apply to each cable in Newtons
 nodalMass = (totalSUPERballMass/12)*ones(12,1);
 Cp = 100;                    % damping constant, too lazy to figure out units.
 Ca = 100;                    % constant for passive and active springs
@@ -36,6 +37,7 @@ global goodRestlengths_all;
 global hvid;
 global f;
 global nodes;
+global simReset;
 
 %%% Calibrated %%%
 % load('positions.mat');
@@ -107,14 +109,14 @@ nodes = [
 % [random_rotation,~] = qr(randn(3));
 % nodes = nodes*random_rotation;
 
-% HH  = makehgtform('axisrotate',[0 0 1],0.8);
-% HH  = makehgtform('axisrotate',[1 0 0],0.6)*HH;
+HH  = makehgtform('axisrotate',[1 0 0],0.4);
+HH  = makehgtform('axisrotate',[0 1 0],-0.8)*HH;
 %%%%%% This rotate the robot to face 3-6-7 %%%%%%%%%%%
 %%%%%% Used in the local/external video tests %%%%%%%%
-HH  = makehgtform('axisrotate',[0 1 0],3.14);
-HH  = makehgtform('axisrotate',[0 1 0],0.7)*HH;
-HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
-HH  = makehgtform('axisrotate',[0 0 1],-1.6)*HH;
+% HH  = makehgtform('axisrotate',[0 1 0],3.14);
+% HH  = makehgtform('axisrotate',[0 1 0],0.7)*HH;
+% HH  = makehgtform('axisrotate',[1 0 0],-0.6)*HH;
+% HH  = makehgtform('axisrotate',[0 0 1],-1.6)*HH;
 
 %%%%%% This rotate the robot to face 6-8-9 %%%%%%%%%%%
 %%%%%% Used in the flop tests %%%%%%%%%%%%%%%%%%%%%%%%
@@ -352,14 +354,16 @@ ax1  = ax2;
 
 %%%% USE WITH REAL ROBOT %%%
 
-superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
-rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+% superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,0);
+% rosMessageListener = rossubscriber('/ranging_data_matlab','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%% USE WITH SIMULATED DATA FROM NTRT %%%
-% superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
-% rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
-% rosNodeMessageListener = rossubscriber('/node_positions','std_msgs/Float32MultiArray',@(src,msg) nodePositionsCallback(msg.Data));
+superBallUpdate(superBall,superBallDynamicsPlot,tspan,[ax1 ax2],hh,barLength,lines,stringRestLength,1);
+rosMessageListener = rossubscriber('/ranging_data_matlab_sim','std_msgs/Float32MultiArray',@(src,msg) superBallUpdate(double(msg.Data)));
+rosNodeMessageListener = rossubscriber('/node_positions','std_msgs/Float32MultiArray',@(src,msg) nodePositionsCallback(msg.Data));
+global simReset
+rosResetMessageListener = rossubscriber('/superball/control','std_msgs/String',@(src,msg) resetCallback(msg.Data));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosMessageListener));
 lh = addlistener(f,'ObjectBeingDestroyed',@(f1,f2) clearThing(rosNodeMessageListener));

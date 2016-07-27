@@ -264,11 +264,11 @@ else if nargin == 1
         
         state = [state superBall.ySimUKF(:)];
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%         x_Avg = mean( superBallUKFPlot.nodePoints(:,1));
-%         y_Avg = mean( superBallUKFPlot.nodePoints(:,2));
-%         lims = 2.5*barlength;
-%         xlim(ax(1),[-lims lims]+x_Avg);
-%         ylim(ax(1),[-lims lims]+y_Avg);
+        x_Avg = mean( superBallUKFPlot.nodePoints(:,1));
+        y_Avg = mean( superBallUKFPlot.nodePoints(:,2));
+        lims = 2.5*barlength;
+        xlim(ax(1),[-lims lims]+x_Avg);
+        ylim(ax(1),[-lims lims]+y_Avg);
         
         %%%%%%%%%%%% Try and make a movie %%%%%%%%%%%%%%%%%%%%%%
         % Desired frame resolution (see fig2frame). The video will automatically adopt the resolution of the first frame (see HELP VIDEOWRITER).
@@ -294,42 +294,42 @@ else if nargin == 1
             %         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %
             %         %%%%%%%%%%%%Compute Command and update dynamics $%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %         if(mod(i,1)==0)
-            %         currentWorkingLengths = unique(round(rand(00,1)*107))+1;
-            %         else
-            %             currentWorkingLengths = unique(round(rand(0,1)*107))+1;
-            %         end
-            %         %disp(length(currentWorkingLengths))
-            %         workingMeasureIndices = allMeasureIndices(:,currentWorkingLengths);
-            %         superBall.lengthMeasureIndices = [bars workingMeasureIndices];
-            %         dynamicsUpdate(superBall,tspan);
-            %         actualNodes =  superBall.ySim(1:end/2,:);
-            %         barVec = actualNodes(bars(1,:),:) - actualNodes(bars(2,:),:);
-            %         barNorm = sqrt(barVec(:,1).^2 + barVec(:,2).^2 + barVec(:,3).^2);
-            %         barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
-            %
-            %         LI =  workingMeasureIndices;
-            %         lengthNoise = randn(size(LI,2),1)*0.05;
-            %         tiltNoise = 5/180*pi*randn(6,1);
-            %         yyPlusBase = [actualNodes; superBall.baseStationPoints];
-            %         allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
-            %         z = sqrt(sum(allVectors,2));
-            %         superBall.measurementUKFInput =[barAngleFromVert+tiltNoise; 1.7*ones(6,1); (z + lengthNoise + lambdaErrors(currentWorkingLengths))];
-            %         ukfUpdate(superBall,tspan);
-            %
-            %         superBallDynamicsPlot.nodePoints = actualNodes ;
-            %         superBallUKFPlot.nodePoints = superBall.ySimUKF(1:end/2,:);
-            %         updatePlot(superBallDynamicsPlot);
-            %         updatePlot(superBallUKFPlot);
-            %         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %         lims = 1.2*1.7;
-            %         x_Avg = mean(actualNodes(:,1));
-            %         y_Avg = mean(actualNodes(:,2));
-            %         xlim(ax(1),[-lims lims]+x_Avg)
-            %         ylim(ax(1),[-lims lims]+y_Avg)
-            %         xlim(ax(2),[-lims lims]+x_Avg)
-            %         ylim(ax(2),[-lims lims]+y_Avg)
-            %         drawnow  %plot it up
+                    if(mod(i,1)==0)
+                    currentWorkingLengths = unique(round(rand(00,1)*107))+1;
+                    else
+                        currentWorkingLengths = unique(round(rand(0,1)*107))+1;
+                    end
+                    %disp(length(currentWorkingLengths))
+                    workingMeasureIndices = allMeasureIndices(:,currentWorkingLengths);
+                    superBall.lengthMeasureIndices = [bars workingMeasureIndices];
+                    dynamicsUpdate(superBall,tspan);
+                    actualNodes =  superBall.ySim(1:end/2,:);
+                    barVec = actualNodes(bars(1,:),:) - actualNodes(bars(2,:),:);
+                    barNorm = sqrt(barVec(:,1).^2 + barVec(:,2).^2 + barVec(:,3).^2);
+                    barAngleFromVert = acos(barVec(:,3:3:end)./barNorm);
+            
+                    LI =  workingMeasureIndices;
+                    lengthNoise = randn(size(LI,2),1)*0.05;
+                    tiltNoise = 5/180*pi*randn(6,1);
+                    yyPlusBase = [actualNodes; superBall.baseStationPoints];
+                    allVectors = (yyPlusBase(LI(1,:),:) - yyPlusBase(LI(2,:),:)).^2;
+                    z = sqrt(sum(allVectors,2));
+                    superBall.measurementUKFInput =[barAngleFromVert+tiltNoise; 1.7*ones(6,1); (z + lengthNoise + lambdaErrors(currentWorkingLengths))];
+                    ukfUpdate(superBall,tspan);
+            
+                    superBallDynamicsPlot.nodePoints = actualNodes ;
+                    superBallUKFPlot.nodePoints = superBall.ySimUKF(1:end/2,:);
+                    updatePlot(superBallDynamicsPlot);
+                    updatePlot(superBallUKFPlot);
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    lims = 1.2*1.7;
+                    x_Avg = mean(actualNodes(:,1));
+                    y_Avg = mean(actualNodes(:,2));
+                    xlim(ax(1),[-lims lims]+x_Avg)
+                    ylim(ax(1),[-lims lims]+y_Avg)
+                    xlim(ax(2),[-lims lims]+x_Avg)
+                    ylim(ax(2),[-lims lims]+y_Avg)
+                    drawnow  %plot it up
         end
     end
 end

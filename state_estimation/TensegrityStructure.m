@@ -224,6 +224,7 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             sim = obj.simStruct;
             grav = sim.grav; %m/s^2
             groundH = obj.groundHeight;
+            countReset = 0;
             M = sim.M; fN = sim.fN;
             stiffness = [sim.stringStiffness; sim.barStiffness];
             CC = sim.C';
@@ -260,7 +261,7 @@ classdef TensegrityStructure < matlab.mixin.Copyable
                 nodalMemberForces = CC*memberForces; %sum of the forces at each node exerted by caple and rod
                 
                 %%%%%%%%%%%%%% Ground Friction modeling %%%%%%%%%%
-                if( groundH <= -100)
+                if(groundH <= -100)
                     groundForces = [zeros(size(nodeXYZ(:,3))) zeros(size(nodeXYZ(:,3)))];
                 else                
                     %update points not in contact
@@ -301,7 +302,7 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             Gindex = [1:nUKF; 1:nUKF]; Gindex = Gindex(:);
             ind1 = 1:3:3*nUKF; ind2 = ind1+1; ind3 = ind1+2; ind12 = [ind1; ind2]; ind12 = ind12(:);
             ind11 = 1:2:2*nUKF; ind22 = 2:2:2*nUKF;
-            
+            global resetCount;
             
             if(nargin>2)
                 obj.ySimUKF = y0;
@@ -339,8 +340,22 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             X(fN+obj.n,:) = 0; %set velocities of fixed nodes to zero
             %nAngle = sum(obj.goodAngles);
             nVector = sum(obj.goodVectors);
-            Q_noise = blkdiag(0.4^2*eye(L/2),0.4^2*eye(L/2)); %process noise covariance matrix
-            R_noise = blkdiag(0.045^2*eye(nVector*3),0.03^2*eye(m-nVector*3)); %measurement noise covariance matrix
+            Q_noise = blkdiag(0.3^2*eye(L/2),0.42^2*eye(L/2)); %process noise covariance matrix
+            %%% Use this for ranging and IMU
+            R_noise = blkdiag(0.02^2*eye(nVector*3),0.05^2*eye(m-nVector*3)); %measurement noise covariance matrix
+            %%% Use this for IMU only
+%             R_noise = blkdiag(0.03^2*eye(nVector*3),1^2*eye(m-nVector*3)); %measurement noise covariance matrix
+            global simReset
+            if(simReset)
+                if(resetCount > 30)
+                    Q_noise = blkdiag(0.6^2*eye(L/2),0.6^2*eye(L/2)); %process noise covariance matrix
+                    R_noise = blkdiag(0.03^2*eye(nVector*3),0.045^2*eye(m-nVector*3)); %measurement noise covariance matrix
+                    resetCount = resetCount + 1
+                else
+                    simReset = 0;
+                    resetCount = 0;
+                end
+            end
 %             R_noise = blkdiag(0.03^2*eye(nVector*3),0.045^2*eye(m-nVector*3)); %measurement noise covariance matrix
             %if you reduce the IMU part of R_noise, then the filter becomes
             %unstable. 

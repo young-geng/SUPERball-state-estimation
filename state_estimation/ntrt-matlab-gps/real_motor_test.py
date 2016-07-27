@@ -41,10 +41,10 @@ time_pub = rospy.Publisher('/superball/timestep', UInt16, queue_size=1)
 
 # Testing single motor movements
 motor_move = [8,12,4,2,5,9] 
-move_amount = 48
+move_amount = 35 
 count = 1
 index = 2
-lastIndex = 5
+lastIndex = 1
 rate = 100 #in ms
 move = 0
 out = 0
@@ -87,6 +87,6 @@ while(not rospy.is_shutdown()):
             msg.data = motor_pos[idx]
             motor_pubs[idx].publish(msg)
     print motor_pubs[motor_move[index]-1].name
-    print motor_pubs[motor_move[lastIndex]-1].name
+    #print motor_pubs[motor_move[lastIndex]-1].name
     time_pub.publish(rate)
     r.sleep()
