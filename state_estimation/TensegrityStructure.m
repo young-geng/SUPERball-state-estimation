@@ -362,7 +362,7 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             %R_noise = blkdiag(0.005^2*eye(nVector),0.029^2*eye(m-nVector)); %measurement noise covariance matrix
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            groundH = obj.groundHeight;
+            %groundH = obj.groundHeight;
             M = sim.M;
             stiffness = [sim.stringStiffness; sim.barStiffness];
             CC = sim.C';
@@ -373,6 +373,8 @@ classdef TensegrityStructure < matlab.mixin.Copyable
             isString = logical([ones(obj.ss,nUKF); zeros(obj.bb,nUKF)]);
             xyzNodes = X(1:end/2,:);
             xyzDots = X((1:end/2)+end/2,:);
+            % Added to make a slopped ground (HACK!)
+            groundH = -1 * obj.groundHeight * mean(xyzNodes(1,ind2));
             for i = 1:round(tspan/dt)                              % calculation loop
                 %i
                 %dt

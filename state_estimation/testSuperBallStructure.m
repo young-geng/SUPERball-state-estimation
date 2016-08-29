@@ -6,12 +6,12 @@ close all
 set(0,'DefaultFigureWindowStyle','normal')
 
 barLength = 1.75;
-%totalSUPERballMass = 28;    % kg
-totalSUPERballMass = 25;    % kg
+totalSUPERballMass = 28;    % kg
+%totalSUPERballMass = 25;    % kg
 barSpacing = barLength/4;
 lims = 4.5*barLength;
 
-%%% Need to turn off gravity for initial position and orientation finding 
+%%% Need to turn off gravity for initialros position and orientation finding 
 gravity = 0.0; 
 gravity = 9.8;             % m/s^2
 
