@@ -19,7 +19,7 @@ rospy.init_node("sim_data_to_matlab")
 node_pos = np.zeros((12,3))
 motor_pos = np.zeros((12,1))
 all_data = np.zeros((210,1))
-noise_on = 1
+noise_on = 0
 
 # Node offset to move the robot around.
 node_offset = np.array([2.0, -2.0, 0.0])
